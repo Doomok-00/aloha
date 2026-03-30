@@ -65,7 +65,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         * { cursor: none !important; }
         .cursor-dot { width: 10px; height: 10px; background: #000; border: 2px solid #fff; border-radius: 50%; position: fixed; z-index: 1000000; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.5); }
-        .cursor-trail { position: fixed; z-index: 999999; pointer-events: none; font-size: 28px; filter: drop-shadow(0 0 8px rgba(0,210,255,0.9)); will-change: transform; }
+        .cursor-trail { position: fixed; z-index: 999999; pointer-events: none; font-size: 28px; filter: drop-shadow(0 0 8px rgba(0,210,255,0.9)); will-change: transform; transition: transform 0.1s ease-out; }
         @media (pointer: coarse) { .cursor-dot, .cursor-trail { display: none !important; } * { cursor: auto !important; } }
         .touch-ripple { position: fixed; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: transparent; transform: scale(0); animation: ripple-out 0.5s ease-out; pointer-events: none; z-index: 9999999; }
         @keyframes ripple-out { from { transform: scale(0); opacity: 1; } to { transform: scale(2.5); opacity: 0; } }
@@ -98,11 +98,11 @@
         .res-item { background: #f0faff; padding: 15px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: #333; }
         .cancel-btn { background: #ff3b30; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-        /* 상태 배지 스타일 */
-        .status-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; gap: 6px; background: #eee; }
-        .status-wait { background: #fff4e5; color: #ff9800; } /* 노란 계열 */
-        .status-confirm { background: #e8f5e9; color: #4caf50; } /* 초록 계열 */
-        .status-cancel { background: #ffebee; color: #f44336; } /* 빨간 계열 */
+        /* 상태 배지 스타일 수정 */
+        .status-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; gap: 6px; border: none; }
+        .status-wait { background: #fff4e5; color: #ff9800; } 
+        .status-confirm { background: #e8f5e9; color: #4caf50; } 
+        .status-cancel { background: #ffebee; color: #f44336; } 
         .status-dot { width: 8px; height: 8px; border-radius: 50%; }
         .dot-wait { background: #ff9800; }
         .dot-confirm { background: #4caf50; }
@@ -115,6 +115,10 @@
         .admin-table th { background: #00d2ff; color: #000; padding: 10px; }
         .admin-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .admin-table input, .admin-table select { width: 100%; background: #222; color: #fff; border: 1px solid #00d2ff; padding: 4px; border-radius: 4px; }
+        
+        /* 관리자 상태 선택 드롭다운용 스타일 */
+        .admin-status-select { background: none !important; border: none !important; font-weight: bold; cursor: pointer; text-align: center; }
+
         .admin-btn { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; margin-right: 3px; }
         .btn-edit { background: #ffcc00; color: #000; }
         .btn-save { background: #4cd964; color: #fff; }
@@ -245,12 +249,34 @@
         }
         window.addEventListener('touchstart', (e) => createRipple(e.touches[0].clientX, e.touches[0].clientY));
 
+        // 마우스 트레일 & 파도타기 애니메이션
         const dot = document.querySelector('.cursor-dot');
         const trail = document.querySelector('.cursor-trail');
         let mx = 0, my = 0, tx = 0, ty = 0;
         window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx+'px'; dot.style.top = my+'px'; });
-        function animate() { tx += (mx - tx) * 0.1; ty += (my - ty) * 0.1; trail.style.transform = `translate3d(${tx + 15}px, ${ty + 15}px, 0)`; requestAnimationFrame(animate); }
+        
+        function animate() { 
+            tx += (mx - tx) * 0.1; 
+            ty += (my - ty) * 0.1; 
+            // 파도타기 효과: Math.sin을 활용하여 위아래로 5px 정도 출렁임
+            const wave = Math.sin(Date.now() * 0.003) * 6;
+            trail.style.transform = `translate3d(${tx + 15}px, ${ty + 15 + wave}px, 0)`; 
+            requestAnimationFrame(animate); 
+        }
         animate();
+
+        // 날짜 차이 계산 함수
+        function getDurationText(dateStr) {
+            if (!dateStr) return "";
+            const parts = dateStr.split(" ~ ");
+            if (parts.length === 2) {
+                const d1 = new Date("20" + parts[0].replace(/\./g, '-'));
+                const d2 = new Date("20" + parts[1].replace(/\./g, '-'));
+                const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+                return `  ${diff}일`;
+            }
+            return "  1일";
+        }
 
         const autoHyphen = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
@@ -259,7 +285,7 @@
         };
         document.getElementById('book_phone').addEventListener('input', autoHyphen);
         document.getElementById('check_phone').addEventListener('input', autoHyphen);
-        flatpickr("#rangeDate", { mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today" });
+        flatpickr("#rangeDate", { mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today", conjunction: " ~ " });
 
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -269,7 +295,7 @@
                 email: document.getElementById('book_email').value, dates: document.getElementById('rangeDate').value, 
                 product: document.getElementById('book_product').value, adults: document.getElementById('book_adults').value, 
                 children: document.getElementById('book_children').value, time: new Date().toLocaleString(),
-                status: "대기" // 기본값 설정
+                status: "예약 대기" 
             };
             btn.innerText = "전송 중...";
             try {
@@ -280,12 +306,11 @@
             btn.innerText = "예약 신청 완료";
         });
 
-        // 상태 배지 HTML 생성 함수
         function getStatusBadge(status) {
-            let cls = "status-wait", dotCls = "dot-wait";
-            if(status === "확정") { cls = "status-confirm"; dotCls = "dot-confirm"; }
-            else if(status === "취소") { cls = "status-cancel"; dotCls = "dot-cancel"; }
-            return `<span class="status-badge ${cls}"><span class="status-dot ${dotCls}"></span>${status || '대기'}</span>`;
+            let cls = "status-wait", dotCls = "dot-wait", label = status || "예약 대기";
+            if(label === "예약 확정") { cls = "status-confirm"; dotCls = "dot-confirm"; }
+            else if(label === "예약 취소") { cls = "status-cancel"; dotCls = "dot-cancel"; }
+            return `<span class="status-badge ${cls}"><span class="status-dot ${dotCls}"></span>${label}</span>`;
         }
 
         async function handleLookup() {
@@ -306,7 +331,7 @@
                             <div style="flex:1;">
                                 <div style="margin-bottom:5px;">${getStatusBadge(r.status)}</div>
                                 <b>📦 ${r.product}</b>
-                                <p style="font-size:13px; color:#666;">📅 ${r.dates}</p>
+                                <p style="font-size:13px; color:#666;">📅 ${r.dates}${getDurationText(r.dates)}</p>
                             </div>
                             <button class="cancel-btn" onclick="handleCancel('${phone}', '${resKey}', '${r.name}', '${r.product}')">취소</button>`;
                         area.appendChild(item);
@@ -318,7 +343,7 @@
         async function handleCancel(phone, resKey, name, product) {
             if (!confirm("취소하시겠습니까?")) return;
             const cancelData = new FormData();
-            cancelData.append("알림", "⚠️ 예약 취소"); cancelData.append("고객", name); cancelData.append("연락처", phone);
+            cancelData.append("알림", "⚠️ 예약 취소 요청"); cancelData.append("고객", name); cancelData.append("연락처", phone);
             try {
                 await fetch("https://formspree.io/f/xojpdaqq", { method: 'POST', body: cancelData, headers: { 'Accept': 'application/json' } });
                 await window.deleteFromFirebase(phone, resKey); alert("취소되었습니다."); handleLookup();
@@ -341,6 +366,11 @@
         }
         function changePageSize() { rowsPerPage = parseInt(document.getElementById('rowsPerPage').value); curPage = 1; renderAdminTable(); }
         
+        async function quickUpdateStatus(pKey, rKey, newStatus) {
+            await window.updateFirebase(pKey, rKey, { status: newStatus });
+            loadAdminData();
+        }
+
         function renderAdminTable() {
             const tbody = document.getElementById('adminTbody'); tbody.innerHTML = "";
             if(filteredData.length === 0) { tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:30px;'>데이터가 없습니다.</td></tr>"; return; }
@@ -354,42 +384,34 @@
                 const originalIdx = filteredData.indexOf(r);
                 const no = originalIdx + 1;
 
+                const statusVal = r.status || "예약 대기";
+                let statusSelectHtml = `
+                    <select class="admin-status-select" onchange="quickUpdateStatus('${r.phoneKey}', '${r.resKey}', this.value)">
+                        <option value="예약 대기" ${statusVal === '예약 대기' ? 'selected' : ''}>예약 대기</option>
+                        <option value="예약 확정" ${statusVal === '예약 확정' ? 'selected' : ''}>예약 확정</option>
+                        <option value="예약 취소" ${statusVal === '예약 취소' ? 'selected' : ''}>예약 취소</option>
+                    </select>
+                `;
+
                 if (editResKey === r.resKey) {
                     tr.innerHTML = `
-                        <td>${no}</td>
-                        <td>${r.time || ''}</td>
-                        <td>
-                            <select id="edit_status">
-                                <option value="대기" ${r.status==='대기'?'selected':''}>대기</option>
-                                <option value="확정" ${r.status==='확정'?'selected':''}>확정</option>
-                                <option value="취소" ${r.status==='취소'?'selected':''}>취소</option>
-                            </select>
-                        </td>
+                        <td>${no}</td><td>${r.time || ''}</td>
+                        <td>${statusSelectHtml}</td>
                         <td><input type="text" id="edit_name" value="${r.name || ''}"></td>
                         <td><input type="text" id="edit_phone" value="${r.phone || ''}"></td>
                         <td><input type="text" id="edit_product" value="${r.product || ''}"></td>
                         <td><input type="text" id="edit_dates" value="${r.dates || ''}"></td>
                         <td><input type="text" id="edit_adults" value="${r.adults || ''}"></td>
                         <td><input type="text" id="edit_children" value="${r.children || ''}"></td>
-                        <td>
-                            <button class="admin-btn btn-save" onclick="saveEdit('${r.phoneKey}', '${r.resKey}')">저장</button>
-                            <button class="admin-btn" onclick="cancelEdit()">취소</button>
-                        </td>`;
+                        <td><button class="admin-btn btn-save" onclick="saveEdit('${r.phoneKey}', '${r.resKey}')">저장</button><button class="admin-btn" onclick="cancelEdit()">취소</button></td>`;
                 } else {
                     tr.innerHTML = `
-                        <td>${no}</td>
-                        <td>${r.time || ''}</td>
-                        <td>${getStatusBadge(r.status)}</td>
-                        <td>${r.name || ''}</td>
-                        <td>${r.phone || ''}</td>
-                        <td>${r.product || ''}</td>
-                        <td>${r.dates || ''}</td>
-                        <td>${r.adults || 0}</td>
-                        <td>${r.children || 0}</td>
-                        <td>
-                            <button class="admin-btn btn-edit" onclick="startEdit('${r.resKey}')">수정</button>
-                            <button class="admin-btn btn-del" onclick="deleteItem('${r.phoneKey}', '${r.resKey}')">삭제</button>
-                        </td>`;
+                        <td>${no}</td><td>${r.time || ''}</td>
+                        <td>${statusSelectHtml}</td>
+                        <td>${r.name || ''}</td><td>${r.phone || ''}</td><td>${r.product || ''}</td>
+                        <td>${r.dates}${getDurationText(r.dates)}</td>
+                        <td>${r.adults || 0}</td><td>${r.children || 0}</td>
+                        <td><button class="admin-btn btn-edit" onclick="startEdit('${r.resKey}')">수정</button><button class="admin-btn btn-del" onclick="deleteItem('${r.phoneKey}', '${r.resKey}')">삭제</button></td>`;
                 }
                 tbody.appendChild(tr);
             });
@@ -407,15 +429,7 @@
         function startEdit(rKey) { editResKey = rKey; renderAdminTable(); }
         function cancelEdit() { editResKey = null; renderAdminTable(); }
         async function saveEdit(pKey, rKey) {
-            const updated = { 
-                name: document.getElementById('edit_name').value, 
-                phone: document.getElementById('edit_phone').value, 
-                product: document.getElementById('edit_product').value, 
-                dates: document.getElementById('edit_dates').value, 
-                adults: document.getElementById('edit_adults').value, 
-                children: document.getElementById('edit_children').value,
-                status: document.getElementById('edit_status').value // 수정된 상태 저장
-            };
+            const updated = { name: document.getElementById('edit_name').value, phone: document.getElementById('edit_phone').value, product: document.getElementById('edit_product').value, dates: document.getElementById('edit_dates').value, adults: document.getElementById('edit_adults').value, children: document.getElementById('edit_children').value };
             await window.updateFirebase(pKey, rKey, updated); alert("수정 완료"); editResKey = null; loadAdminData();
         }
         async function deleteItem(pKey, rKey) { if (confirm("정말 삭제하시겠습니까?")) { await window.deleteFromFirebase(pKey.replace(/-/g,""), rKey); alert("삭제되었습니다."); loadAdminData(); } }
