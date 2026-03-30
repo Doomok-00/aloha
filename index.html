@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>ALOHA VIBES - 관리자 모드 고도화</title>
+    <title>ALOHA VIBES - 하와이 전문 여행사</title>
     
+    <!-- 라이브러리 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -29,14 +30,20 @@
 
         window.saveToFirebase = async (data) => {
             const key = data.phone.replace(/-/g, "");
-            await set(push(ref(db, 'reservations/' + key)), data);
+            const newData = { ...data, timestamp: Date.now() }; // 정렬용 타임스탬프 추가
+            await set(push(ref(db, 'reservations/' + key)), newData);
         };
         window.getFromFirebase = async (phone) => {
             const key = phone.replace(/-/g, "");
-            const snapshot = await get(child(ref(db), `reservations/${key}`));
+            const snapshot = await get(child(ref(getDatabase()), `reservations/${key}`));
             return snapshot.exists() ? snapshot.val() : null;
         };
-        window.getAllReservations = async () => {
+        window.deleteFromFirebase = async (phone, resKey) => {
+            const phoneKey = phone.replace(/-/g, "");
+            await remove(ref(db, `reservations/${phoneKey}/${resKey}`));
+        };
+        // 관리자용 전체 데이터 가져오기
+        window.getAllFromFirebase = async () => {
             const snapshot = await get(ref(db, 'reservations'));
             if (snapshot.exists()) {
                 const allData = snapshot.val();
@@ -46,30 +53,30 @@
                         flatList.push({ ...allData[phoneKey][resKey], resKey, phoneKey });
                     });
                 });
-                return flatList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                return flatList.sort((a, b) => b.timestamp - a.timestamp); // 신청 시간순 정렬
             }
             return [];
-        };
-        window.deleteFromFirebase = async (phone, resKey) => {
-            const phoneKey = phone.replace(/-/g, "");
-            await remove(ref(db, `reservations/${phoneKey}/${resKey}`));
         };
     </script>
 
     <style>
-        /* 1. 마우스 커서 스타일 (하와이 테마) */
+        /* 1. 기본 스타일 (유지) */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* 2. 마우스 커서 (서핑보드 트레일링) */
         * { cursor: none !important; }
         .cursor-dot { width: 8px; height: 8px; background: #00d2ff; border-radius: 50%; position: fixed; z-index: 1000000; pointer-events: none; transform: translate(-50%, -50%); border: 1px solid #fff; }
-        .cursor-trail { position: fixed; z-index: 999999; pointer-events: none; font-size: 24px; filter: drop-shadow(0 0 5px rgba(0,210,255,0.8)); transition: transform 0.1s ease-out; }
+        .cursor-trail { position: fixed; z-index: 999999; pointer-events: none; font-size: 28px; filter: drop-shadow(0 0 8px rgba(0,210,255,0.9)); will-change: transform; }
 
-        /* 기본 레이아웃 */
         html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; color: #fff; }
-        .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
-        section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover !important; background-position: center !important; text-align: center; padding: 0 5%; }
+        .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover !important; background-position: center !important; text-align: center; padding: 0 10%; }
 
         #home { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600'); }
+        #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600'); }
         #booking { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1600'); }
         #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600'); }
+        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600'); }
         #admin { background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1454165833767-027eeea15c3e?w=1600'); }
 
         .indicator { position: fixed; left: 25px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
@@ -79,45 +86,43 @@
         .menu-toggle { position: fixed; top: 25px; right: 25px; z-index: 1001; width: 50px; height: 50px; background: #00d2ff; color: white; border: none; font-size: 30px; border-radius: 8px; }
         .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.4s; }
         .menu-overlay.open { opacity: 1; visibility: visible; }
-        .menu-link { font-size: 2.2rem; font-weight: 800; color: #fff; text-decoration: none; margin: 10px 0; }
+        .menu-link { font-size: 2.2rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; margin: 12px 0; }
 
-        /* 폼 & 관리자 카드 */
-        .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; }
-        .action-btn { background: #00d2ff; border: none; padding: 12px 20px; color: white; border-radius: 8px; font-weight: bold; }
+        .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; }
+        .action-btn { background: #00d2ff; border: none; padding: 15px 30px; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* 어드민 테이블 고도화 */
-        .admin-content { width: 100%; max-width: 1000px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; overflow: hidden; }
-        .admin-table-container { overflow-x: auto; margin-bottom: 15px; min-height: 100px; }
-        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-        .admin-table th { background: #00d2ff; color: #000; padding: 10px; }
+        /* 관리자 테이블 스타일 */
+        .admin-box { width: 100%; max-width: 1100px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: left; }
+        .admin-table { width: 100%; border-collapse: collapse; color: #fff; font-size: 13px; margin-top: 15px; }
+        .admin-table th { background: #00d2ff; color: #000; padding: 10px; text-align: left; }
         .admin-table td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        
-        .admin-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .admin-controls select { background: #222; color: #fff; border: 1px solid #444; padding: 5px 10px; border-radius: 5px; }
-
-        /* 페이지네이션 */
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 15px; }
-        .page-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 5px 12px; border-radius: 4px; transition: 0.2s; }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .page-btn { background: #333; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
         .page-btn.active { background: #00d2ff; color: #000; font-weight: bold; }
-        .page-btn:disabled { opacity: 0.3; }
 
-        #adminLogin { display: flex; flex-direction: column; gap: 10px; }
-        #adminView { display: none; width: 100%; }
-        #resultArea { margin-top: 15px; text-align: left; display: none; }
+        #resultArea { margin-top: 15px; width: 100%; max-height: 250px; overflow-y: auto; text-align: left; display: none; }
+        .res-item { background: #f0faff; padding: 15px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; margin-bottom: 25px; }
+        .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        .map-box { width: 100%; height: 420px; border-radius: 20px; overflow: hidden; border: 2px solid #00d2ff; }
+        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } .menu-link { font-size: 1.8rem; } }
     </style>
 </head>
 <body>
 
-    <!-- 마우스 커서 요소 -->
-    <div class="cursor-dot" id="cursorDot"></div>
-    <div class="cursor-trail" id="cursorTrail">🏄‍♂️</div>
+    <!-- 마우스 커서 -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-trail">🏄‍♂️</div>
 
     <button class="menu-toggle" onclick="toggleMenu()">≡</button>
     <div class="menu-overlay" id="menuOverlay">
         <a href="javascript:void(0)" class="menu-link" onclick="goToSection(0)">HOME</a>
-        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(1)">BOOKING</a>
-        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(2)">CHECK</a>
-        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(3)">ADMIN</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(1)">TOURS</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(2)">BOOKING</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(3)">CHECK</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(4)">LOCATION</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(5)" style="color:#00d2ff;">ADMIN</a>
     </div>
 
     <div class="indicator">
@@ -125,126 +130,145 @@
         <div class="dot" onclick="goToSection(1)"></div>
         <div class="dot" onclick="goToSection(2)"></div>
         <div class="dot" onclick="goToSection(3)"></div>
+        <div class="dot" onclick="goToSection(4)"></div>
+        <div class="dot" onclick="goToSection(5)"></div>
     </div>
 
     <div class="container" id="mainContainer">
-        <section id="home"><h1>ALOHA VIBES</h1><p style="color: #00d2ff;">Experience Real Hawaii</p></section>
+        <!-- 1. HOME -->
+        <section id="home"><h1>ALOHA VIBES</h1><p style="color: #00d2ff;">완벽한 하와이 어드벤처</p></section>
+        
+        <!-- 2. TOURS -->
+        <section id="tours">
+            <h2 style="margin-bottom: 30px;">Premium Tours</h2>
+            <div class="tour-container">
+                <div class="tour-card"><h3>오아후 섬 투어</h3><p>$149</p></div>
+                <div class="tour-card"><h3>헬기 투어</h3><p>$320</p></div>
+                <div class="tour-card"><h3>스노클링</h3><p>$85</p></div>
+                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p>$250</p></div>
+            </div>
+            <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
+        </section>
 
+        <!-- 3. BOOKING -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
-                <input type="text" name="name" id="book_name" placeholder="성함" required style="padding:10px; border-radius:5px; border:1px solid #ddd;">
-                <input type="tel" name="phone" id="book_phone" placeholder="연락처" maxlength="13" required style="padding:10px; border-radius:5px; border:1px solid #ddd;">
-                <input type="text" id="rangeDate" name="dates" placeholder="일정 선택" readonly required style="padding:10px; border-radius:5px; border:1px solid #ddd;">
-                <select name="product" id="book_product" required style="padding:10px; border-radius:5px; border:1px solid #ddd;">
+                <input type="text" name="name" id="book_name" placeholder="성함" required>
+                <input type="tel" name="phone" id="book_phone" placeholder="연락처 (010-0000-0000)" maxlength="13" required>
+                <input type="email" name="email" id="book_email" placeholder="이메일" required>
+                <input type="text" id="rangeDate" name="dates" placeholder="일정 선택" readonly required>
+                <select name="product" id="book_product" required>
                     <option value="">상품 선택</option>
                     <option>오아후 섬 일주</option><option>섬 전체 헬기 투어</option>
                     <option>하나우마베이 스노클링</option><option>하와이 스카이다이빙</option>
                 </select>
-                <input type="hidden" name="adults" id="book_adults" value="1">
-                <input type="hidden" name="children" id="book_children" value="0">
-                <button type="submit" class="action-btn" id="submitBtn">예약 신청</button>
+                <div style="display:flex; gap:10px;">
+                    <select name="adults" id="book_adults" required>
+                        <option value="1">성인 1명</option><option value="2">성인 2명</option><option value="3">성인 3명</option><option value="4">성인 4명</option>
+                    </select>
+                    <select name="children" id="book_children">
+                        <option value="0">어린이 0명</option><option value="1">어린이 1명</option><option value="2">어린이 2명</option>
+                    </select>
+                </div>
+                <button type="submit" class="action-btn" id="submitBtn">예약 신청 완료</button>
             </form>
         </section>
 
+        <!-- 4. CHECK -->
         <section id="check">
-            <h2>My Reservation</h2>
-            <div class="form-card" style="margin-top: 20px;">
-                <input type="tel" id="check_phone" placeholder="연락처를 입력하세요" style="padding:10px; border-radius:5px; border:1px solid #ddd;">
-                <button class="action-btn" onclick="handleLookup()">조회하기</button>
+            <h2 style="margin-bottom: 20px;">Check Reservation</h2>
+            <div class="form-card">
+                <input type="tel" id="check_phone" placeholder="연락처를 입력하세요" maxlength="13">
+                <button type="button" class="action-btn" onclick="handleLookup()">내역 조회하기</button>
                 <div id="resultArea"></div>
             </div>
         </section>
 
-        <section id="admin">
-            <h2 style="margin-bottom: 20px;">Admin</h2>
-            <div id="adminLogin" class="form-card">
-                <input type="password" id="adminPw" placeholder="Admin Password" style="padding:10px; border-radius:5px; border:1px solid #ddd;">
-                <button class="action-btn" onclick="checkAdmin()">로그인</button>
-            </div>
+        <!-- 5. LOCATION -->
+        <section id="contact">
+            <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
+            <p style="margin-top:10px; font-size:14px; color:rgba(255,255,255,0.7);">📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
+        </section>
 
-            <div id="adminView" class="admin-content">
-                <div class="admin-controls">
+        <!-- 6. ADMIN (New) -->
+        <section id="admin">
+            <div id="adminAuth" class="form-card">
+                <h3>Admin Access</h3>
+                <input type="password" id="adminPassword" placeholder="관리자 비밀번호">
+                <button class="action-btn" onclick="loginAdmin()">접속하기</button>
+            </div>
+            
+            <div id="adminPanel" class="admin-box" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>전체 예약 현황</h2>
                     <div>
-                        <span id="totalCount">Total: 0</span>
-                        <select id="pageSize" onchange="changePageSize()" style="margin-left:10px;">
+                        <select id="rowsPerPage" onchange="changePageSize()" style="padding:5px; border-radius:4px;">
                             <option value="10">10줄 보기</option>
                             <option value="30">30줄 보기</option>
                             <option value="50">50줄 보기</option>
                         </select>
+                        <button onclick="loadAdminData()" style="padding:5px 10px; cursor:pointer;">새로고침</button>
                     </div>
-                    <button class="action-btn" style="padding: 5px 15px;" onclick="loadAdminData()">새로고침</button>
                 </div>
-
-                <div class="admin-table-container">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>신청시간</th>
-                                <th>성함</th>
-                                <th>연락처</th>
-                                <th>상품</th>
-                                <th>일정</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminList"></tbody>
-                    </table>
-                </div>
-                <div id="pagination" class="pagination"></div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>신청시간</th><th>성함</th><th>연락처</th><th>상품</th><th>일정</th><th>인원</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTbody"></tbody>
+                </table>
+                <div id="adminPagination" class="pagination"></div>
             </div>
         </section>
     </div>
 
     <script>
-        // --- 1. 하와이풍 마우스 커서 로직 ---
-        const dot = document.getElementById('cursorDot');
-        const trail = document.getElementById('cursorTrail');
-        let mouseX = 0, mouseY = 0, trailX = 0, trailY = 0;
-
-        window.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX; mouseY = e.clientY;
-            dot.style.left = mouseX + 'px';
-            dot.style.top = mouseY + 'px';
+        // --- 1. 마우스 효과 ---
+        const dot = document.querySelector('.cursor-dot');
+        const trail = document.querySelector('.cursor-trail');
+        let mx = 0, my = 0, tx = 0, ty = 0;
+        window.addEventListener('mousemove', e => { 
+            mx = e.clientX; my = e.clientY; 
+            dot.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
         });
-
-        function animateTrail() {
-            // 서핑보드가 부드럽게 따라오는 속도 조절 (0.1 ~ 0.2)
-            trailX += (mouseX - trailX) * 0.12;
-            trailY += (mouseY - trailY) * 0.12;
-            trail.style.left = (trailX + 15) + 'px'; // 살짝 옆으로 비껴나게
-            trail.style.top = (trailY + 15) + 'px';
-            requestAnimationFrame(animateTrail);
+        function animate() {
+            tx += (mx - tx) * 0.1; ty += (my - ty) * 0.1;
+            trail.style.transform = `translate3d(${tx + 15}px, ${ty + 15}px, 0)`;
+            requestAnimationFrame(animate);
         }
-        animateTrail();
+        animate();
 
-        // --- 2. 기본 기능 (전화번호, 달력) ---
-        document.getElementById('book_phone').addEventListener('input', (e) => {
+        // --- 2. 기본 입력 제어 ---
+        const phoneAutoHyphen = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v;
             else if (v.length < 8) r = v.substr(0, 3) + "-" + v.substr(3);
             else r = v.substr(0, 3) + "-" + v.substr(3, 4) + "-" + v.substr(7);
             e.target.value = r;
-        });
+        };
+        document.getElementById('book_phone').addEventListener('input', phoneAutoHyphen);
+        document.getElementById('check_phone').addEventListener('input', phoneAutoHyphen);
 
         flatpickr("#rangeDate", { mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today" });
 
-        // --- 3. 예약 및 조회 ---
+        // --- 3. 예약 및 개인 조회 ---
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             const data = { 
-                name: document.getElementById('book_name').value, 
-                phone: document.getElementById('book_phone').value, 
-                dates: document.getElementById('rangeDate').value, 
-                product: document.getElementById('book_product').value, 
-                time: new Date().toLocaleString(),
-                timestamp: Date.now() 
+                name: document.getElementById('book_name').value, phone: document.getElementById('book_phone').value, 
+                email: document.getElementById('book_email').value, dates: document.getElementById('rangeDate').value, 
+                product: document.getElementById('book_product').value, adults: document.getElementById('book_adults').value, 
+                children: document.getElementById('book_children').value, time: new Date().toLocaleString() 
             };
-            btn.innerText = "처리 중...";
-            await window.saveToFirebase(data);
-            alert("예약 신청이 완료되었습니다.");
-            this.reset();
-            btn.innerText = "예약 신청";
+            btn.innerText = "전송 중...";
+            try {
+                const res = await fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'Accept': 'application/json' } });
+                if (res.ok) { await window.saveToFirebase(data); alert("예약 신청이 완료되었습니다."); this.reset(); }
+            } catch (err) { alert("오류 발생"); }
+            btn.innerText = "예약 신청 완료";
         });
 
         async function handleLookup() {
@@ -256,98 +280,81 @@
             if (data) {
                 area.innerHTML = "";
                 Object.values(data).reverse().forEach(r => {
-                    const d = document.createElement('div');
-                    d.style.cssText = "background:#f0faff; padding:10px; border-radius:10px; margin-bottom:5px; border-left:4px solid #00d2ff;";
-                    d.innerHTML = `<b>${r.product}</b><br><small>${r.dates}</small>`;
-                    area.appendChild(d);
+                    const item = document.createElement('div');
+                    item.className = 'res-item';
+                    item.innerHTML = `<div><b>${r.product}</b><p style="font-size:12px;">${r.dates}</p></div>`;
+                    area.appendChild(item);
                 });
             } else { area.innerHTML = "내역이 없습니다."; }
         }
 
-        // --- 4. 어드민 페이지네이션 로직 ---
-        let allData = [];
-        let currentPage = 1;
-        let pageSize = 10;
+        // --- 4. 관리자 전용 로직 ---
+        let adminData = [];
+        let curPage = 1;
+        let rowsPerPage = 10;
 
-        function checkAdmin() {
-            if (document.getElementById('adminPw').value === "aloha1234") {
-                document.getElementById('adminLogin').style.display = "none";
-                document.getElementById('adminView').style.display = "block";
+        function loginAdmin() {
+            if (document.getElementById('adminPassword').value === "aloha1234") { // 비번 설정
+                document.getElementById('adminAuth').style.display = "none";
+                document.getElementById('adminPanel').style.display = "block";
                 loadAdminData();
-            } else { alert("비밀번호 오류"); }
+            } else { alert("비밀번호가 틀렸습니다."); }
         }
 
         async function loadAdminData() {
-            allData = await window.getAllReservations();
-            document.getElementById('totalCount').innerText = `Total: ${allData.length}`;
-            currentPage = 1;
+            adminData = await window.getAllFromFirebase();
             renderAdminTable();
         }
 
         function changePageSize() {
-            pageSize = parseInt(document.getElementById('pageSize').value);
-            currentPage = 1;
+            rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+            curPage = 1;
             renderAdminTable();
         }
 
         function renderAdminTable() {
-            const listArea = document.getElementById('adminList');
-            listArea.innerHTML = "";
-            
-            if (allData.length === 0) {
-                listArea.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:50px;'>예약 내역이 없습니다.</td></tr>";
-                document.getElementById('pagination').innerHTML = "";
+            const tbody = document.getElementById('adminTbody');
+            tbody.innerHTML = "";
+            if(adminData.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>예약 내역이 없습니다.</td></tr>";
                 return;
             }
+            const start = (curPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginated = adminData.slice(start, end);
 
-            const start = (currentPage - 1) * pageSize;
-            const end = start + pageSize;
-            const pageData = allData.slice(start, end);
-
-            pageData.forEach(r => {
+            paginated.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${r.time}</td><td>${r.name}</td><td>${r.phone}</td><td>${r.product}</td><td>${r.dates}</td>`;
-                listArea.appendChild(tr);
+                tr.innerHTML = `<td>${r.time}</td><td>${r.name}</td><td>${r.phone}</td><td>${r.product}</td><td>${r.dates}</td><td>성인${r.adults}/아동${r.children}</td>`;
+                tbody.appendChild(tr);
             });
-
             renderPagination();
         }
 
         function renderPagination() {
-            const nav = document.getElementById('pagination');
-            nav.innerHTML = "";
-            const totalPages = Math.ceil(allData.length / pageSize);
-            if (totalPages <= 1) return;
-
-            const prevBtn = document.createElement('button');
-            prevBtn.className = "page-btn"; prevBtn.innerText = "Prev";
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => { currentPage--; renderAdminTable(); };
-            nav.appendChild(prevBtn);
-
+            const pBox = document.getElementById('adminPagination');
+            pBox.innerHTML = "";
+            const totalPages = Math.ceil(adminData.length / rowsPerPage);
             for (let i = 1; i <= totalPages; i++) {
-                const btn = document.createElement('button');
-                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-                btn.innerText = i;
-                btn.onclick = () => { currentPage = i; renderAdminTable(); };
-                nav.appendChild(btn);
+                const b = document.createElement('button');
+                b.className = `page-btn ${i === curPage ? 'active' : ''}`;
+                b.innerText = i;
+                b.onclick = () => { curPage = i; renderAdminTable(); };
+                pBox.appendChild(b);
             }
-
-            const nextBtn = document.createElement('button');
-            nextBtn.className = "page-btn"; nextBtn.innerText = "Next";
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => { currentPage++; renderAdminTable(); };
-            nav.appendChild(nextBtn);
         }
 
+        // --- 5. 메뉴 및 스크롤 제어 ---
         function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('open'); }
-        function goToSection(i) { document.querySelectorAll('section')[i].scrollIntoView({ behavior: 'smooth' }); toggleMenu(); }
-
+        function goToSection(i) { 
+            document.querySelectorAll('section')[i].scrollIntoView({ behavior: 'smooth' }); 
+            if(document.getElementById('menuOverlay').classList.contains('open')) toggleMenu(); 
+        }
         document.getElementById('mainContainer').addEventListener('scroll', () => {
             let cur = 0;
             const sections = document.querySelectorAll('section');
             const container = document.getElementById('mainContainer');
-            sections.forEach((s, i) => { if (container.scrollTop >= s.offsetTop - 100) cur = i; });
+            sections.forEach((s, i) => { if (container.scrollTop >= s.offsetTop - 50) cur = i; });
             document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
         });
     </script>
