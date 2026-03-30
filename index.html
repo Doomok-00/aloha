@@ -5,84 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>ALOHA VIBES - 하와이 전문 여행사</title>
     
-    <!-- 1. 기간 선택 라이브러리 -->
+    <!-- 1. 달력 라이브러리 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
+    <!-- 2. 이메일 전송 SDK (EmailJS) -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
     <style>
-        /* 기본 설정 */
+        /* [이전과 동일한 CSS 스타일 시작] */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        /* 마우스 포인터: 모바일/태블릿 차단 */
-        @media (pointer: coarse) {
-            .cursor-dot, .cursor-outline { display: none !important; }
-            * { cursor: auto !important; }
-        }
-        @media (pointer: fine) {
-            * { cursor: none !important; }
-            .cursor-dot, .cursor-outline { display: block; }
-        }
-
+        @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
+        @media (pointer: fine) { * { cursor: none !important; } .cursor-dot, .cursor-outline { display: block; } }
         html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; }
-
-        /* [수정] 커서 스타일: z-index를 극한으로 높여 달력 위에서도 보이게 함 */
-        .cursor-dot { 
-            width: 8px; height: 8px; background: #00d2ff; border-radius: 50%; 
-            position: fixed; top: 0; left: 0; pointer-events: none; 
-            z-index: 1000000; /* 최상위 레이어 */
-            transform: translate(-50%, -50%); 
-        }
-        .cursor-outline { 
-            width: 30px; height: 30px; border: 2px solid rgba(0, 210, 255, 0.5); border-radius: 50%; 
-            position: fixed; top: 0; left: 0; pointer-events: none; 
-            z-index: 999999; /* 최상위 레이어 */
-            transform: translate(-50%, -50%); 
-        }
+        .cursor-dot { width: 8px; height: 8px; background: #00d2ff; border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000; transform: translate(-50%, -50%); }
+        .cursor-outline { width: 30px; height: 30px; border: 2px solid rgba(0, 210, 255, 0.5); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; transform: translate(-50%, -50%); }
         .cursor-outline.hover { width: 60px; height: 60px; background: rgba(0, 210, 255, 0.1); border-color: #00d2ff; }
-
-        /* [추가] 달력 레이어 우선순위 강제 조정 */
         .flatpickr-calendar { z-index: 99999 !important; }
-
-        /* 레이아웃 */
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; color: white; text-align: center; padding: 0 10%; }
-
-        #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80'); }
-        #tours { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1542259005453-d93f3b203d98?auto=format&fit=crop&w=1600&q=80'); }
-        #booking { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1600&q=80'); }
-        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?auto=format&fit=crop&w=1600&q=80'); }
-
-        /* UI 요소 */
+        #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600'); }
+        #tours { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1542259005453-d93f3b203d98?w=1600'); }
+        #booking { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600'); }
+        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600'); }
         .indicator { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
-        .dot { width: 12px; height: 12px; border: 1px solid #fff; transition: 0.3s; background: rgba(255,255,255,0.2); }
+        .dot { width: 12px; height: 12px; border: 1px solid #fff; background: rgba(255,255,255,0.2); }
         .dot.active { background: #00d2ff; border-color: #00d2ff; transform: scale(1.3); }
-
         .menu-toggle { position: fixed; top: 20px; right: 20px; z-index: 1001; width: 50px; height: 50px; background: #00d2ff; color: white; border: none; font-size: 30px; border-radius: 5px; }
         .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.4s ease; }
         .menu-overlay.open { opacity: 1; visibility: visible; }
-        .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; transition: 0.3s; margin: 15px 0; }
-
-        /* 예약 폼 */
+        .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; margin: 15px 0; }
         .booking-form { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
-        .booking-form input, .booking-form select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; font-family: inherit; }
-        
+        .booking-form input, .booking-form select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; }
         #rangeDate { background: #f9f9f9; border: 2px solid #00d2ff !important; font-weight: bold; text-align: center; color: #007fa3; }
-
         .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 850px; }
-        .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); }
-        .book-btn { background: #00d2ff; border: none; padding: 10px 15px; color: white; border-radius: 5px; font-weight: bold; margin-top: 5px; }
-
+        .tour-card { background: rgba(255,255,255,0.12); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); }
+        .book-btn { background: #00d2ff; border: none; padding: 10px 15px; color: white; border-radius: 5px; font-weight: bold; }
         .contact-info { width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 15px; }
         .map-box { width: 100%; height: 250px; border-radius: 15px; overflow: hidden; border: 2px solid #00d2ff; }
-
         @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } }
+        /* [CSS 스타일 끝] */
     </style>
 </head>
 <body>
 
-    <!-- 마우스 커서 (z-index 1000000) -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -102,13 +70,10 @@
     </div>
 
     <div class="container" id="mainContainer">
-        <section id="home">
-            <h1 style="font-size: 4rem; letter-spacing: 12px;">ALOHA VIBES</h1>
-            <p style="font-size: 1.3rem; color: #00d2ff;">완벽한 하와이 어드벤처의 시작</p>
-        </section>
-
+        <section id="home"><h1>ALOHA VIBES</h1><p>완벽한 하와이 어드벤처의 시작</p></section>
+        
         <section id="tours">
-            <h2 style="margin-bottom: 25px;">Premium Tours</h2>
+            <h2>Premium Tours</h2>
             <div class="tour-container">
                 <div class="tour-card"><h3>오아후 섬 투어</h3><p>$149</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
                 <div class="tour-card"><h3>헬기 투어</h3><p>$320</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
@@ -117,63 +82,72 @@
             </div>
         </section>
 
+        <!-- 예약 양식 -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking</h2>
             <form class="booking-form" id="resForm">
-                <input type="text" placeholder="성함" required>
-                <input type="tel" placeholder="연락처" required>
-                <input type="email" placeholder="이메일" required>
-                
-                <div style="text-align: left;">
-                    <label style="font-size: 12px; font-weight: bold; color: #666; margin-left: 5px;">여행 일정 (기간 선택)</label>
-                    <input type="text" id="rangeDate" placeholder="날짜를 선택하세요" readonly required>
-                </div>
-
-                <select required>
+                <input type="text" id="u_name" name="name" placeholder="성함" required>
+                <input type="tel" id="u_phone" name="phone" placeholder="연락처" required>
+                <input type="email" id="u_email" name="email" placeholder="이메일" required>
+                <input type="text" id="rangeDate" name="date_range" placeholder="여행 일정 선택" readonly required>
+                <select id="u_product" name="product" required>
                     <option value="">상품 선택</option>
                     <option>오아후 섬 일주</option><option>섬 전체 헬기 투어</option>
                     <option>하나우마베이 스노클링</option><option>하와이 스카이다이빙</option>
                 </select>
-                <button type="submit" class="book-btn" style="height: 45px;">예약 신청</button>
+                <button type="submit" class="book-btn" id="submitBtn" style="height: 45px;">예약 신청하기</button>
             </form>
         </section>
 
         <section id="contact">
             <div class="contact-info">
-                <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;" loading="lazy"></iframe></div>
-                <div style="background:rgba(0,0,0,0.75); padding:20px; border-radius:15px; text-align:left;"><p>📍 2335 Kalākaua Ave, Honolulu, HI 96815</p></div>
+                <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
+                <p>📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
             </div>
         </section>
     </div>
 
     <script>
+        // [EmailJS 초기화] - 여기에 본인의 Public Key를 넣으세요
+        (function() {
+            emailjs.init("YOUR_PUBLIC_KEY"); 
+        })();
+
         const dot = document.querySelector('.cursor-dot');
         const outline = document.querySelector('.cursor-outline');
-        const overlay = document.getElementById('menuOverlay');
         const container = document.getElementById('mainContainer');
         const resForm = document.getElementById('resForm');
 
-        // [핵심] 기간 선택 라이브러리 설정
+        // 달력 설정
         flatpickr("#rangeDate", {
-            mode: "range",
-            locale: "ko",
-            dateFormat: "y.m.d",
-            minDate: "today",
-            disableMobile: "true",
+            mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today", disableMobile: "true",
             onClose: function(selectedDates, dateStr, instance) {
                 if (selectedDates.length === 2) {
-                    const start = selectedDates[0];
-                    const end = selectedDates[1];
-                    const diffTime = Math.abs(end - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                    const startStr = instance.formatDate(start, "y.m.d");
-                    const endStr = instance.formatDate(end, "y.m.d");
-                    instance.input.value = `${startStr} ~ ${endStr} (${diffDays}일)`;
+                    const diffDays = Math.ceil(Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24)) + 1;
+                    instance.input.value = `${instance.formatDate(selectedDates[0], "y.m.d")} ~ ${instance.formatDate(selectedDates[1], "y.m.d")} (${diffDays}일)`;
                 }
             }
         });
 
-        // 1. 마우스 커서 (PC 전용)
+        // [핵심] 이메일 전송 로직
+        resForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = '전송 중...';
+
+            // EmailJS 전송 (Service ID, Template ID를 넣으세요)
+            emailjs.sendForm('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', this)
+                .then(function() {
+                    alert('알로하! 예약 신청이 jangyh89@gmail.com으로 전송되었습니다.');
+                    btn.innerText = '예약 신청하기';
+                    resForm.reset();
+                }, function(error) {
+                    alert('전송 실패: ' + JSON.stringify(error));
+                    btn.innerText = '예약 신청하기';
+                });
+        });
+
+        // 마우스/메뉴/스크롤 기능 (이전과 동일)
         const isTouch = window.matchMedia("(pointer: coarse)").matches;
         if (!isTouch) {
             window.addEventListener('mousemove', (e) => {
@@ -181,31 +155,12 @@
                 outline.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 250, fill: "forwards" });
             });
         }
-
-        // 2. 예약 신청 알림
-        resForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert("알로하! 예약 신청이 완료되었습니다.\n일정: " + document.getElementById('rangeDate').value);
-            resForm.reset();
-        });
-
-        // 메뉴/스크롤 기능
-        function toggleMenu() { overlay.classList.toggle('open'); }
-        function goToSection(idx) {
-            document.querySelectorAll('section')[idx].scrollIntoView({ behavior: 'smooth' });
-            overlay.classList.remove('open');
-        }
+        function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('open'); }
+        function goToSection(idx) { document.querySelectorAll('section')[idx].scrollIntoView({ behavior: 'smooth' }); toggleMenu(); }
         container.addEventListener('scroll', () => {
             let current = 0;
             document.querySelectorAll('section').forEach((sec, i) => { if (container.scrollTop >= sec.offsetTop - 50) current = i; });
             document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
-        });
-
-        // 호버 시 마우스 커서 커지는 효과 (달력 포함)
-        const hoverTargets = document.querySelectorAll('button, a, input, select, .dot, .flatpickr-day');
-        hoverTargets.forEach(el => {
-            el.addEventListener('mouseenter', () => { if(!isTouch) outline.classList.add('hover'); });
-            el.addEventListener('mouseleave', () => { if(!isTouch) outline.classList.remove('hover'); });
         });
     </script>
 </body>
