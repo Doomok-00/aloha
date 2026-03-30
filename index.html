@@ -46,29 +46,42 @@
     <style>
         /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
+        
+        /* 마우스 포인터: 모바일/태블릿 차단 */
+        @media (pointer: coarse) {
+            .cursor-dot, .cursor-outline { display: none !important; }
+            * { cursor: auto !important; }
+        }
+        
+        /* 2. [수정] 즉각 반응형 마우스 포인터 디자인 */
         @media (pointer: fine) {
             * { cursor: none !important; }
-            .cursor-dot { width: 6px; height: 6px; background: #00d2ff; border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000; transform: translate(-50%, -50%); }
-            .cursor-outline { width: 36px; height: 36px; border: 1.5px solid rgba(255, 255, 255, 0.6); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, border-color 0.2s; }
-            .cursor-outline.hover { width: 54px; height: 54px; border-color: #00d2ff; background: rgba(0, 210, 255, 0.05); }
+            .cursor-dot {
+                width: 6px; height: 6px; background: #00d2ff; border-radius: 50%;
+                position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000;
+                will-change: transform; /* 하드웨어 가속 */
+            }
+            .cursor-outline {
+                width: 34px; height: 34px; border: 1.5px solid rgba(255, 255, 255, 0.6); border-radius: 50%;
+                position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999;
+                will-change: transform; /* 하드웨어 가속 */
+                transition: width 0.15s ease-out, height 0.15s ease-out, border-color 0.15s ease-out, background-color 0.15s ease-out;
+            }
+            .cursor-outline.hover {
+                width: 50px; height: 50px; border-color: #00d2ff; background-color: rgba(0, 210, 255, 0.1);
+            }
         }
+
         html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; color: #fff; }
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; text-align: center; padding: 0 10%; }
 
-        /* 2. 배경 이미지 설정 (이미지 주소 최적화) */
-        #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=80'); }
-        #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=80'); }
-        
-        /* [중요 수정] 세 번째 페이지 배경 이미지 변경 (하와이 스카이다이빙) */
-        #booking { 
-            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1551632432-c735e8306521?auto=format&fit=crop&w=1600&q=80'); 
-            background-color: #222; /* 이미지 로딩 전 배경색 */
-        }
-
-        #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600&q=80'); }
-        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600&q=80'); }
+        /* 3. 배경 이미지 (섹션별 독립 설정) */
+        #home { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600'); }
+        #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1600'); }
+        #booking { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1521017432521-f34f73003295?q=80&w=1600'); }
+        #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?q=80&w=1600'); }
+        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?q=80&w=1600'); }
 
         .indicator { position: fixed; left: 25px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
         .dot { width: 10px; height: 10px; border: 1px solid #fff; background: rgba(255,255,255,0.2); transition: 0.3s; }
@@ -87,21 +100,18 @@
         .person-count div { flex: 1; }
         .person-count label { font-size: 11px; color: #666; font-weight: bold; margin-left: 2px; }
 
-        #resultArea { margin-top: 15px; width: 100%; max-height: 300px; overflow-y: auto; text-align: left; display: none; }
+        #resultArea { margin-top: 15px; width: 100%; max-height: 250px; overflow-y: auto; text-align: left; display: none; }
         .res-item { background: #f0faff; padding: 15px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .res-info b { color: #007fa3; display: block; margin-bottom: 3px; }
-        .res-info p { color: #555; font-size: 13px; margin: 2px 0; }
         .cancel-btn { background: #ff3b30; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
         .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; margin-bottom: 25px; }
         .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); }
         .map-box { width: 100%; height: 420px; border-radius: 20px; overflow: hidden; border: 2px solid #00d2ff; }
-        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } .menu-link { font-size: 1.8rem; } }
+        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } }
     </style>
 </head>
 <body>
 
-    <!-- 타겟 마우스 커서 -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -136,7 +146,6 @@
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING (배경 이미지 고해상도로 재설정) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
@@ -153,15 +162,15 @@
                     <div>
                         <label>성인</label>
                         <select name="adults" id="book_adults" required>
-                            <option value="1">성인 0명</option><option value="1">성인 1명</option><option value="2">성인 2명</option><option value="3">성인 3명</option>
-                            <option value="4">성인 4명</option><option value="5">성인 5명</option><option value="5">성인 6명</option><option value="5">성인 7명이상</option>
+                            <option value="0">성인 0명</option><option value="1">성인 1명</option><option value="2">성인 2명</option><option value="3">성인 3명</option>
+                            <option value="4">성인 4명</option><option value="5">성인 5명</option><option value="6">성인 6명</option><option value="7">성인 7명이상</option>
                         </select>
                     </div>
                     <div>
                         <label>어린이</label>
                         <select name="children" id="book_children" required>
                             <option value="0">어린이 0명</option><option value="1">어린이 1명</option><option value="2">어린이 2명</option>
-                            <option value="3">어린이 3명</option> <option value="4">어린이 4명</option><option value="5">어린이 5명</option><option value="6">어린이 6명이상</option>
+                            <option value="3">어린이 3명</option><option value="4">어린이 4명</option><option value="5">어린이 5명</option><option value="6">어린이 6명이상</option>
                         </select>
                     </div>
                 </div>
@@ -186,7 +195,41 @@
     </div>
 
     <script>
-        // 1. 하이픈 자동
+        // 1. [핵심수정] 마우스 커서 스크립트 (딜레이 제거 및 부드러운 트레킹)
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        let mouseX = 0, mouseY = 0;
+        let dotX = 0, dotY = 0;
+        let outlineX = 0, outlineY = 0;
+
+        if (!window.matchMedia("(pointer: coarse)").matches) {
+            window.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            function animateCursor() {
+                // 점은 마우스 위치와 1:1 (지연 없음)
+                dotX = mouseX;
+                dotY = mouseY;
+                dot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
+
+                // 원은 아주 살짝 부드럽게 (반응성 강화)
+                outlineX += (mouseX - outlineX) * 0.2; 
+                outlineY += (mouseY - outlineY) * 0.2;
+                outline.style.transform = `translate3d(${outlineX}px, ${outlineY}px, 0) translate(-50%, -50%)`;
+
+                requestAnimationFrame(animateCursor);
+            }
+            animateCursor();
+
+            document.querySelectorAll('button, a, input, select, .tour-card, .dot').forEach(el => {
+                el.addEventListener('mouseenter', () => outline.classList.add('hover'));
+                el.addEventListener('mouseleave', () => outline.classList.remove('hover'));
+            });
+        }
+
+        // 2. 하이픈 자동
         const handlePhone = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v;
@@ -196,20 +239,6 @@
         };
         document.getElementById('book_phone').addEventListener('input', handlePhone);
         document.getElementById('check_phone').addEventListener('input', handlePhone);
-
-        // 2. 마우스 (정확한 중앙 정렬)
-        const dot = document.querySelector('.cursor-dot');
-        const outline = document.querySelector('.cursor-outline');
-        if (!window.matchMedia("(pointer: coarse)").matches) {
-            window.addEventListener('mousemove', (e) => {
-                dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px';
-                outline.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 300, fill: "forwards" });
-            });
-            document.querySelectorAll('button, a, input, select, .tour-card, .dot').forEach(el => {
-                el.addEventListener('mouseenter', () => outline.classList.add('hover'));
-                el.addEventListener('mouseleave', () => outline.classList.remove('hover'));
-            });
-        }
 
         // 3. 달력
         flatpickr("#rangeDate", {
@@ -230,7 +259,7 @@
             btn.innerText = "예약 신청 완료";
         });
 
-        // 5. 조회 (버그 수정 완료)
+        // 5. 조회
         async function handleLookup() {
             const name = document.getElementById('check_name').value.trim();
             const phone = document.getElementById('check_phone').value;
@@ -247,7 +276,7 @@
                         const key = Object.keys(data).find(k => data[k] === r);
                         const item = document.createElement('div');
                         item.className = 'res-item';
-                        item.innerHTML = `<div class="res-info"><b>📦 ${r.product}</b><p>📅 ${r.dates}</p><p>👥 성인 ${r.adults}, 어린이 ${r.children}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${key}', '${r.name}', '${r.product}')">취소</button>`;
+                        item.innerHTML = `<div style="flex:1;"><b>📦 ${r.product}</b><p style="color:#555; font-size:13px;">📅 ${r.dates}</p><p style="color:#555; font-size:13px;">👥 성인 ${r.adults}, 어린이 ${r.children}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${key}', '${r.name}', '${r.product}')">취소</button>`;
                         area.appendChild(item);
                     });
                 } else { alert("이름이 일치하지 않습니다."); area.style.display="none"; }
