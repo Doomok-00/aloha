@@ -48,7 +48,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
         
-        /* 2. [수정] 즉각 반응하는 타겟형 마우스 포인터 */
+        /* 2. 즉각 반응하는 타겟형 마우스 포인터 */
         @media (pointer: fine) {
             * { cursor: none !important; }
             .cursor-dot {
@@ -71,11 +71,19 @@
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; text-align: center; padding: 0 10%; }
 
-        /* 3. [중요] 배경 이미지 설정 (페이지 1, 2와 동일한 방식 적용) */
+        /* 3. 배경 이미지 설정 */
         #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600'); }
         #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1600'); }
-        /* 세 번째 페이지 배경: 하와이 스카이다이빙 이미지 (동일 구조 적용) */
-        #booking { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1521017432521-f34f73003295?q=80&w=1600'); }
+        
+        /* [수정됨] 세 번째 페이지 배경: 하와이 스카이다이빙/해변 풍경 */
+        #booking { 
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+            url('https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=1600'); 
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+        }
+
         #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?q=80&w=1600'); }
         #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?q=80&w=1600'); }
 
@@ -143,7 +151,7 @@
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING (성인/어린이 옵션 업데이트 완료) -->
+        <!-- 3. BOOKING SECTION -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
@@ -289,7 +297,9 @@
         function goToSection(i) { document.querySelectorAll('section')[i].scrollIntoView({ behavior: 'smooth' }); if(document.getElementById('menuOverlay').classList.contains('open')) toggleMenu(); }
         document.getElementById('mainContainer').addEventListener('scroll', () => {
             let cur = 0;
-            document.querySelectorAll('section').forEach((s, i) => { if (document.getElementById('mainContainer').scrollTop >= s.offsetTop - 50) cur = i; });
+            const sections = document.querySelectorAll('section');
+            const container = document.getElementById('mainContainer');
+            sections.forEach((s, i) => { if (container.scrollTop >= s.offsetTop - 50) cur = i; });
             document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
         });
     </script>
