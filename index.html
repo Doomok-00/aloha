@@ -48,42 +48,36 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
         
-        /* 2. 즉각 반응형 타겟 마우스 포인터 */
+        /* 2. [수정] 즉각 반응하는 타겟형 마우스 포인터 */
         @media (pointer: fine) {
             * { cursor: none !important; }
-            .cursor-dot { width: 6px; height: 6px; background: #00d2ff; border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000; }
-            .cursor-outline { width: 34px; height: 34px; border: 1.5px solid rgba(255, 255, 255, 0.6); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; will-change: transform; }
-            .cursor-outline.hover { width: 50px; height: 50px; border-color: #00d2ff; background-color: rgba(0, 210, 255, 0.1); }
+            .cursor-dot {
+                width: 6px; height: 6px; background: #00d2ff; border-radius: 50%;
+                position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000;
+                transform: translate(-50%, -50%);
+                will-change: transform;
+            }
+            .cursor-outline {
+                width: 36px; height: 36px; border: 1.5px solid rgba(255, 255, 255, 0.6); border-radius: 50%;
+                position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999;
+                transform: translate(-50%, -50%);
+                will-change: transform;
+                transition: width 0.15s ease-out, height 0.15s ease-out, border-color 0.15s ease-out;
+            }
+            .cursor-outline.hover { width: 54px; height: 54px; border-color: #00d2ff; background: rgba(0, 210, 255, 0.05); }
         }
 
         html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; color: #fff; }
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-        
-        section { 
-            height: 100dvh; width: 100%; scroll-snap-align: start; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            position: relative; text-align: center; padding: 0 10%;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
-        }
+        section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; text-align: center; padding: 0 10%; }
 
-        /* [배경 이미지 설정 - 경로 수정] */
-        #home { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80'); }
-        
-        /* 2번 페이지: 투어 배경 */
-        #tours { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1600&q=80'); }
-        
-        /* 3번 페이지: 예약 (스카이다이빙 이미지로 고정) */
-        #booking { 
-            background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1521017432521-f34f73003295?auto=format&fit=crop&w=1600&q=80'); 
-        }
-
-        /* 4번 페이지: 조회 배경 */
-        #check { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?auto=format&fit=crop&w=1600&q=80'); }
-        
-        /* 5번 페이지: 위치 배경 */
-        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?auto=format&fit=crop&w=1600&q=80'); }
+        /* 3. [중요] 배경 이미지 설정 (페이지 1, 2와 동일한 방식 적용) */
+        #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600'); }
+        #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1600'); }
+        /* 세 번째 페이지 배경: 하와이 스카이다이빙 이미지 (동일 구조 적용) */
+        #booking { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1521017432521-f34f73003295?q=80&w=1600'); }
+        #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?q=80&w=1600'); }
+        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?q=80&w=1600'); }
 
         .indicator { position: fixed; left: 25px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
         .dot { width: 10px; height: 10px; border: 1px solid #fff; background: rgba(255,255,255,0.2); transition: 0.3s; }
@@ -94,6 +88,7 @@
         .menu-overlay.open { opacity: 1; visibility: visible; }
         .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; margin: 15px 0; }
 
+        /* 폼 카드 및 결과 */
         .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; font-family: inherit; }
         .action-btn { background: #00d2ff; border: none; padding: 15px 30px; color: white; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 5px; }
@@ -109,12 +104,11 @@
         .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; margin-bottom: 25px; }
         .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); }
         .map-box { width: 100%; height: 420px; border-radius: 20px; overflow: hidden; border: 2px solid #00d2ff; }
-        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } }
+        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } .menu-link { font-size: 1.8rem; } }
     </style>
 </head>
 <body>
 
-    <!-- 타겟 마우스 커서 -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -149,7 +143,7 @@
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING (배경 및 인원 수정 완료) -->
+        <!-- 3. BOOKING (성인/어린이 옵션 업데이트 완료) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
@@ -199,36 +193,7 @@
     </div>
 
     <script>
-        // 1. [핵심] 즉각 반응 마우스 커서 스크립트
-        const dot = document.querySelector('.cursor-dot');
-        const outline = document.querySelector('.cursor-outline');
-        let mouseX = 0, mouseY = 0;
-        let outlineX = 0, outlineY = 0;
-
-        if (!window.matchMedia("(pointer: coarse)").matches) {
-            window.addEventListener('mousemove', (e) => {
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-                // 점은 즉시 이동 (지연 0)
-                dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
-            });
-
-            function animate() {
-                // 원은 부드럽고 빠르게 추적
-                outlineX += (mouseX - outlineX) * 0.25; 
-                outlineY += (mouseY - outlineY) * 0.25;
-                outline.style.transform = `translate(${outlineX}px, ${outlineY}px) translate(-50%, -50%)`;
-                requestAnimationFrame(animate);
-            }
-            animate();
-
-            document.querySelectorAll('button, a, input, select, .tour-card, .dot').forEach(el => {
-                el.addEventListener('mouseenter', () => outline.classList.add('hover'));
-                el.addEventListener('mouseleave', () => outline.classList.remove('hover'));
-            });
-        }
-
-        // 2. 하이픈 자동
+        // 1. 하이픈 자동
         const handlePhone = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v;
@@ -238,6 +203,31 @@
         };
         document.getElementById('book_phone').addEventListener('input', handlePhone);
         document.getElementById('check_phone').addEventListener('input', handlePhone);
+
+        // 2. 마우스 (즉각 반응 버전)
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        let mouseX = 0, mouseY = 0;
+        let outlineX = 0, outlineY = 0;
+
+        if (!window.matchMedia("(pointer: coarse)").matches) {
+            window.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX; mouseY = e.clientY;
+                dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+            });
+
+            function animate() {
+                outlineX += (mouseX - outlineX) * 0.25; outlineY += (mouseY - outlineY) * 0.25;
+                outline.style.transform = `translate3d(${outlineX}px, ${outlineY}px, 0) translate(-50%, -50%)`;
+                requestAnimationFrame(animate);
+            }
+            animate();
+
+            document.querySelectorAll('button, a, input, select, .tour-card, .dot').forEach(el => {
+                el.addEventListener('mouseenter', () => outline.classList.add('hover'));
+                el.addEventListener('mouseleave', () => outline.classList.remove('hover'));
+            });
+        }
 
         // 3. 달력
         flatpickr("#rangeDate", {
@@ -253,7 +243,7 @@
             btn.innerText = "전송 중...";
             try {
                 const res = await fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'Accept': 'application/json' } });
-                if (res.ok) { await window.saveToFirebase(data); alert("알로하! 예약 신청이 완료되었습니다."); this.reset(); }
+                if (res.ok) { await window.saveToFirebase(data); alert("예약 신청이 완료되었습니다."); this.reset(); }
             } catch (err) { alert("오류 발생"); }
             btn.innerText = "예약 신청 완료";
         });
