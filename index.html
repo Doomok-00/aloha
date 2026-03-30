@@ -46,8 +46,8 @@
                         flatList.push({ ...allData[phoneKey][resKey], resKey, phoneKey });
                     });
                 });
-                // 순서대로 정렬 (오래된 예약이 위로 오게 하여 1, 2, 3... 순번 부여)
-                return flatList.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                // 최신순 정렬 (최신 예약이 배열의 앞쪽으로)
+                return flatList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             }
             return [];
         };
@@ -68,17 +68,10 @@
         .cursor-dot { width: 10px; height: 10px; background: #000; border: 2px solid #fff; border-radius: 50%; position: fixed; z-index: 1000000; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         .cursor-trail { position: fixed; z-index: 999999; pointer-events: none; font-size: 28px; filter: drop-shadow(0 0 8px rgba(0,210,255,0.9)); will-change: transform; }
 
-        @media (pointer: coarse) {
-            .cursor-dot, .cursor-trail { display: none !important; }
-            * { cursor: auto !important; }
-        }
+        @media (pointer: coarse) { .cursor-dot, .cursor-trail { display: none !important; } * { cursor: auto !important; } }
 
         /* 터치 리플: 투명 파동 */
-        .touch-ripple {
-            position: fixed; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5);
-            background: transparent; transform: scale(0); animation: ripple-out 0.5s ease-out;
-            pointer-events: none; z-index: 9999999;
-        }
+        .touch-ripple { position: fixed; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: transparent; transform: scale(0); animation: ripple-out 0.5s ease-out; pointer-events: none; z-index: 9999999; }
         @keyframes ripple-out { from { transform: scale(0); opacity: 1; } to { transform: scale(2.5); opacity: 0; } }
 
         html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; color: #fff; }
@@ -109,11 +102,9 @@
         .res-item { background: #f0faff; padding: 15px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: #333; }
         .cancel-btn { background: #ff3b30; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-        /* 어드민 박스 및 검색바 */
         .admin-box { width: 100%; max-width: 1250px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: left; overflow-x: auto; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
         .admin-search-bar { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 15px; border-radius: 8px; width: 220px; outline: none; }
-        
         .admin-table { width: 100%; border-collapse: collapse; color: #fff; font-size: 12px; min-width: 1100px; }
         .admin-table th { background: #00d2ff; color: #000; padding: 10px; }
         .admin-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -122,7 +113,6 @@
         .btn-edit { background: #ffcc00; color: #000; }
         .btn-save { background: #4cd964; color: #fff; }
         .btn-del { background: #ff3b30; color: #fff; }
-
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
         .page-btn { background: #333; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
         .page-btn.active { background: #00d2ff; color: #000; font-weight: bold; }
@@ -209,7 +199,6 @@
             <p style="margin-top:10px; font-size:14px; color:rgba(255,255,255,0.7);">📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
         </section>
 
-        <!-- 6. ADMIN -->
         <section id="admin">
             <div id="adminAuth" class="form-card">
                 <h3>Admin Access</h3>
@@ -242,7 +231,7 @@
     </div>
 
     <script>
-        // 터치 리플
+        // 터치 효과
         function createRipple(x, y) {
             const ripple = document.createElement('div');
             ripple.className = 'touch-ripple'; document.body.appendChild(ripple);
@@ -252,7 +241,7 @@
         }
         window.addEventListener('touchstart', (e) => createRipple(e.touches[0].clientX, e.touches[0].clientY));
 
-        // 커서
+        // PC 커서
         const dot = document.querySelector('.cursor-dot');
         const trail = document.querySelector('.cursor-trail');
         let mx = 0, my = 0, tx = 0, ty = 0;
@@ -270,7 +259,7 @@
         document.getElementById('check_phone').addEventListener('input', autoHyphen);
         flatpickr("#rangeDate", { mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today" });
 
-        // 예약
+        // 예약 및 조회
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -288,7 +277,6 @@
             btn.innerText = "예약 신청 완료";
         });
 
-        // 조회
         async function handleLookup() {
             const name = document.getElementById('check_name').value.trim();
             const phone = document.getElementById('check_phone').value;
@@ -312,7 +300,7 @@
         }
         async function handleCancel(phone, resKey) { if (confirm("예약을 취소하시겠습니까?")) { await window.deleteFromFirebase(phone, resKey); alert("정상적으로 취소되었습니다."); handleLookup(); } }
 
-        // 어드민 전용 로직
+        // 어드민 전용 기능
         let adminData = []; let filteredData = []; let curPage = 1; let rowsPerPage = 10; let editResKey = null;
 
         function loginAdmin() {
@@ -350,10 +338,10 @@
             const end = start + rowsPerPage;
             const paginated = filteredData.slice(start, end);
 
-            // 데이터 개수만큼만 반복하여 행 생성
             paginated.forEach((r, idx) => {
                 const tr = document.createElement('tr');
-                const no = start + idx + 1; // 순차적 번호 표시 (1, 2, 3...)
+                // 순번 로직: 전체 개수에서 현재 인덱스를 빼서 맨 아래가 1번이 되도록 설정 (역순 번호 부여)
+                const no = filteredData.length - (start + idx);
 
                 if (editResKey === r.resKey) {
                     tr.innerHTML = `
