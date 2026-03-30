@@ -198,7 +198,7 @@
                 if (response.ok) {
                     // [중요] 파이어베이스 구글 서버에 저장
                     await window.saveToFirebase(bookingData);
-                    alert("알로하! 예약 신청이 완료되었습니다.\n이제 아이패드 등 모든 기기에서 조회가 가능합니다.");
+                    alert("알로하! 예약 신청이 완료되었습니다.");
                     this.reset();
                 }
             } catch (err) { alert("오류가 발생했습니다."); }
