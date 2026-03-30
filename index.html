@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
-    <!-- 파이어베이스 연결 -->
+    <!-- 파이어베이스 연결 (보내주신 설정값 적용) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, push, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
@@ -28,14 +28,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // [데이터 저장]
         window.saveToFirebase = async (data) => {
             const key = data.phone.replace(/-/g, "");
-            await set(push(ref(db, 'reservations/' + key)), data);
+            const reservationListRef = ref(db, 'reservations/' + key);
+            const newResRef = push(reservationListRef);
+            await set(newResRef, data);
         };
+
+        // [데이터 불러오기 버그 수정]
         window.getFromFirebase = async (phone) => {
-            const key = phone.replace(/-/g, "");
-            const snapshot = await get(child(ref(getDatabase()), `reservations/${key}`));
-            return snapshot.exists() ? snapshot.val() : null;
+            try {
+                const key = phone.replace(/-/g, "");
+                const dbRef = ref(db); 
+                const snapshot = await get(child(dbRef, `reservations/${key}`));
+                return snapshot.exists() ? snapshot.val() : null;
+            } catch (e) {
+                console.error("Firebase Error:", e);
+                return null;
+            }
         };
     </script>
 
@@ -44,20 +55,11 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
         
-        /* 2. 마우스 포인터 (원 안의 점 중앙 정렬) */
+        /* 2. 마우스 포인터 (중앙 정렬 완벽 보정) */
         @media (pointer: fine) {
             * { cursor: none !important; }
-            .cursor-dot {
-                width: 6px; height: 6px; background: #00d2ff; border-radius: 50%;
-                position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000;
-                transform: translate(-50%, -50%); /* 점 중앙 정렬 */
-            }
-            .cursor-outline {
-                width: 36px; height: 36px; border: 1.5px solid rgba(255, 255, 255, 0.6); border-radius: 50%;
-                position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999;
-                transform: translate(-50%, -50%); /* 원 중앙 정렬 */
-                transition: width 0.2s, height 0.2s, border-color 0.2s;
-            }
+            .cursor-dot { width: 6px; height: 6px; background: #00d2ff; border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000; transform: translate(-50%, -50%); }
+            .cursor-outline { width: 36px; height: 36px; border: 1.5px solid rgba(255, 255, 255, 0.6); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, border-color 0.2s; }
             .cursor-outline.hover { width: 54px; height: 54px; border-color: #00d2ff; background: rgba(0, 210, 255, 0.05); }
         }
 
@@ -65,17 +67,13 @@
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; text-align: center; padding: 0 10%; }
 
-        /* 3. 배경 이미지 설정 (요청대로 수정) */
+        /* 3. 배경 이미지 (요청대로 분리) */
         #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600'); }
-        /* 두번째 섹션: 하와이 해안 배경 추가 */
         #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600'); }
-        /* 세번째 섹션: 기존의 숲 배경 복구 */
         #booking { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1542259005453-d93f3b203d98?w=1600'); }
-        /* 네번째 섹션: 기존 조회 배경 */
         #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600'); }
         #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600'); }
 
-        /* UI 버튼 및 인디케이터 */
         .indicator { position: fixed; left: 25px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
         .dot { width: 10px; height: 10px; border: 1px solid #fff; background: rgba(255,255,255,0.2); transition: 0.3s; }
         .dot.active { background: #00d2ff; border-color: #00d2ff; transform: scale(1.3); }
@@ -85,17 +83,12 @@
         .menu-overlay.open { opacity: 1; visibility: visible; }
         .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; margin: 15px 0; }
 
-        /* 투어 카드 (버튼 하나로 통합) */
         .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; margin-bottom: 25px; }
         .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); }
-        .tour-card h3 { color: #00d2ff; font-size: 1.2rem; }
-        .tour-card .price { font-size: 1.2rem; font-weight: bold; color: #ffd700; margin-top: 5px; }
-        
         .action-btn { background: #00d2ff; border: none; padding: 15px 30px; color: white; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px; }
 
-        /* 폼 및 조회 결과 */
         .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; }
-        .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; }
+        .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; font-family: inherit; }
         
         #resultArea { margin-top: 15px; width: 100%; max-height: 250px; overflow-y: auto; text-align: left; display: none; }
         .res-item { background: #f0faff; padding: 12px; border-radius: 10px; border-left: 5px solid #00d2ff; margin-bottom: 8px; }
@@ -130,22 +123,19 @@
     </div>
 
     <div class="container" id="mainContainer">
-        <!-- 1. HOME -->
         <section id="home"><h1>ALOHA VIBES</h1><p style="color: #00d2ff;">완벽한 하와이 어드벤처</p></section>
         
-        <!-- 2. TOURS (배경 이미지 추가 및 하단 통합 버튼) -->
         <section id="tours">
             <h2 style="margin-bottom: 30px;">Premium Tours</h2>
             <div class="tour-container">
-                <div class="tour-card"><h3>오아후 섬 투어</h3><p class="price">$149</p></div>
-                <div class="tour-card"><h3>헬기 투어</h3><p class="price">$320</p></div>
-                <div class="tour-card"><h3>스노클링</h3><p class="price">$85</p></div>
-                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p class="price">$250</p></div>
+                <div class="tour-card"><h3>오아후 섬 투어</h3><p>$149</p></div>
+                <div class="tour-card"><h3>헬기 투어</h3><p>$320</p></div>
+                <div class="tour-card"><h3>스노클링</h3><p>$85</p></div>
+                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p>$250</p></div>
             </div>
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING (기존 배경 유지) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
@@ -162,7 +152,6 @@
             </form>
         </section>
 
-        <!-- 4. CHECK (조회 필터링 수정 완료) -->
         <section id="check">
             <h2 style="margin-bottom: 20px;">Check Reservation</h2>
             <div class="form-card">
@@ -173,7 +162,6 @@
             </div>
         </section>
 
-        <!-- 5. LOCATION -->
         <section id="contact">
             <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
             <p style="margin-top:10px; font-size:14px; color:rgba(255,255,255,0.7);">📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
@@ -181,7 +169,7 @@
     </div>
 
     <script>
-        // 하이픈 자동
+        // 1. 하이픈 자동 생성
         const handlePhone = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v;
@@ -192,7 +180,7 @@
         document.getElementById('book_phone').addEventListener('input', handlePhone);
         document.getElementById('check_phone').addEventListener('input', handlePhone);
 
-        // 마우스 커서
+        // 2. 마우스 커서
         const dot = document.querySelector('.cursor-dot');
         const outline = document.querySelector('.cursor-outline');
         if (!window.matchMedia("(pointer: coarse)").matches) {
@@ -206,47 +194,71 @@
             });
         }
 
-        // 달력
+        // 3. 달력
         flatpickr("#rangeDate", {
             mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today", disableMobile: "true",
             onClose: function(s) { if(s.length===2) this.input.value = this.formatDate(s[0],"y.m.d")+"~"+this.formatDate(s[1],"y.m.d")+" ("+(Math.ceil(Math.abs(s[1]-s[0])/(86400000))+1)+"일)"; }
         });
 
-        // 예약 신청
+        // 4. 예약 신청 (Formspree + Firebase)
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            const data = { name: document.getElementById('book_name').value, phone: document.getElementById('book_phone').value, dates: document.getElementById('rangeDate').value, product: document.getElementById('book_product').value, time: new Date().toLocaleString() };
+            const data = { 
+                name: document.getElementById('book_name').value.trim(), 
+                phone: document.getElementById('book_phone').value, 
+                dates: document.getElementById('rangeDate').value, 
+                product: document.getElementById('book_product').value, 
+                time: new Date().toLocaleString() 
+            };
             btn.innerText = "전송 중...";
             try {
                 const res = await fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'Accept': 'application/json' } });
-                if (res.ok) { await window.saveToFirebase(data); alert("예약 신청이 완료되었습니다."); this.reset(); }
-            } catch (err) { alert("오류 발생"); }
+                if (res.ok) { 
+                    await window.saveToFirebase(data); 
+                    alert("알로하! 예약 신청이 완료되었습니다."); 
+                    this.reset(); 
+                }
+            } catch (err) { alert("전송 오류 발생"); }
             btn.innerText = "예약 신청 완료";
         });
 
-        // 조회 필터링 수정 (다중 내역 대응)
+        // 5. [중요] 조회 기능 버그 수정
         async function handleLookup() {
             const name = document.getElementById('check_name').value.trim();
             const phone = document.getElementById('check_phone').value;
             const area = document.getElementById('resultArea');
-            area.innerHTML = "<p style='color:#333; text-align:center;'>조회 중...</p>";
+            
+            if (!name || !phone) { alert("이름과 연락처를 모두 입력하세요."); return; }
+
+            area.innerHTML = "<p style='color:#333; text-align:center;'>데이터 불러오는 중...</p>";
             area.style.display = "block";
             
-            const data = await window.getFromFirebase(phone);
-            if (data) {
-                // Object.values를 통해 배열로 변환 후 이름 필터링
-                const myRes = Object.values(data).filter(r => r.name.trim() === name);
-                if (myRes.length > 0) {
-                    area.innerHTML = `<h4 style='color:#007fa3; margin-bottom:10px;'>총 ${myRes.length}건의 예약</h4>`;
-                    myRes.forEach(r => {
-                        const item = document.createElement('div');
-                        item.className = 'res-item';
-                        item.innerHTML = `<b>📦 ${r.product}</b><p>📅 일정: ${r.dates}</p><p>🕒 신청일: ${r.time}</p>`;
-                        area.appendChild(item);
-                    });
-                } else { alert("이름이 일치하는 내역이 없습니다."); area.style.display="none"; }
-            } else { alert("해당 번호의 예약 내역이 없습니다."); area.style.display="none"; }
+            try {
+                const data = await window.getFromFirebase(phone);
+                
+                if (data) {
+                    // Firebase에서 가져온 데이터가 객체인지 배열인지 확인 후 변환
+                    const allRecords = Object.values(data);
+                    const myRes = allRecords.filter(r => r.name && r.name.trim() === name);
+
+                    if (myRes.length > 0) {
+                        area.innerHTML = `<h4 style='color:#007fa3; margin-bottom:10px;'>총 ${myRes.length}건의 예약 내역</h4>`;
+                        myRes.reverse().forEach(r => { // 최신순 정렬
+                            const item = document.createElement('div');
+                            item.className = 'res-item';
+                            item.innerHTML = `<b>📦 ${r.product}</b><p>📅 일정: ${r.dates}</p><p>🕒 신청일: ${r.time || '기록없음'}</p>`;
+                            area.appendChild(item);
+                        });
+                    } else {
+                        area.innerHTML = "<p style='color:red; font-size:13px; text-align:center;'>이름이 일치하는 내역이 없습니다.</p>";
+                    }
+                } else {
+                    area.innerHTML = "<p style='color:red; font-size:13px; text-align:center;'>해당 번호로 등록된 내역이 없습니다.</p>";
+                }
+            } catch (err) {
+                area.innerHTML = "<p style='color:red; font-size:13px; text-align:center;'>조회 중 오류가 발생했습니다.</p>";
+            }
         }
 
         // 메뉴/스크롤
