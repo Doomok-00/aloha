@@ -8,16 +8,16 @@
         /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* PC에서만 커스텀 커서 사용 */
-        @media (min-width: 1025px) {
-            * { cursor: none; }
-            .cursor-dot, .cursor-outline { display: block; }
+        /* [수정] 모바일/터치 기기에서는 커스텀 커서가 절대 보이지 않도록 강력 차단 */
+        @media (pointer: coarse) {
+            * { cursor: auto !important; }
+            .cursor-dot, .cursor-outline { display: none !important; visibility: hidden !important; }
         }
-        
-        /* 모바일/태블릿에서는 커스텀 커서 숨김 */
-        @media (max-width: 1024px) {
-            * { cursor: auto; }
-            .cursor-dot, .cursor-outline { display: none !important; }
+
+        /* PC에서만 커스텀 커서 사용 및 시스템 커서 숨김 */
+        @media (pointer: fine) {
+            * { cursor: none !important; }
+            .cursor-dot, .cursor-outline { display: block; }
         }
 
         html, body { 
@@ -132,7 +132,7 @@
 </head>
 <body>
 
-    <!-- 마우스 애니메이션 (PC 전용) -->
+    <!-- 마우스 커서 (PC에서만 작동) -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -172,7 +172,7 @@
 
         <section id="booking">
             <h2 style="margin-bottom: 20px; font-size: 1.8rem;">Booking</h2>
-            <form class="booking-form">
+            <form class="booking-form" id="bookingForm">
                 <input type="text" placeholder="성함" required>
                 <input type="tel" placeholder="연락처" required>
                 <input type="email" placeholder="이메일" required>
@@ -219,24 +219,27 @@
         const endDate = document.getElementById('endDate');
         const sections = document.querySelectorAll('section');
         const dots = document.querySelectorAll('.dot');
+        const bookingForm = document.getElementById('bookingForm');
 
-        // 오늘 날짜 설정 (YYYY-MM-DD)
+        // 오늘 날짜 설정 (과거 날짜 선택 방지)
         const today = new Date().toISOString().split('T')[0];
         startDate.min = today;
 
-        // 1. 마우스 애니메이션 (PC 전용)
-        window.addEventListener('mousemove', (e) => {
-            if (window.innerWidth > 1024) {
+        // 1. 마우스 애니메이션 (PC 전용 및 터치 디바이스 제외)
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (!isTouch) {
+            window.addEventListener('mousemove', (e) => {
                 dot.style.left = e.clientX + 'px';
                 dot.style.top = e.clientY + 'px';
                 outline.animate({
                     left: e.clientX + 'px',
                     top: e.clientY + 'px'
                 }, { duration: 250, fill: "forwards" });
-            }
-        });
+            });
+        }
 
-        // 2. 달력 자동화 및 아이패드 버그 해결
+        // 2. 달력 로직 (iOS/아이패드 버그 해결)
+        // 출발일 선택 시 오늘 날짜가 자동 확정되지 않도록 showPicker 호출 로직 수정
         startDate.addEventListener('change', () => {
             const val = startDate.value;
             if (val) {
@@ -245,35 +248,33 @@
                     endDate.value = "";
                 }
                 
-                // [수정] 터치 기기(아이패드 등)에서는 창이 바로 닫히지 않도록 약간의 지연 시간을 줌
-                const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-                
-                if (isTouchDevice) {
-                    // 터치 기기인 경우 500ms(0.5초) 뒤에 다음 달력을 띄움
+                // iOS에서는 출발일 선택창이 닫히기 전에 focus를 주면 오늘 날짜로 자동 commit되는 버그가 있음
+                // 이를 방지하기 위해 충분한 시간을 두고 포커스를 이동시킴
+                if (isTouch) {
                     setTimeout(() => {
                         endDate.focus();
-                        if ('showPicker' in HTMLInputElement.prototype) {
-                            try { endDate.showPicker(); } catch (e) {}
-                        }
-                    }, 500);
+                    }, 800); // 0.8초의 충분한 딜레이 부여
                 } else {
-                    // PC인 경우 즉시 실행
                     endDate.focus();
-                    if ('showPicker' in HTMLInputElement.prototype) {
-                        try { endDate.showPicker(); } catch (e) {}
-                    }
+                    if ('showPicker' in HTMLInputElement.prototype) endDate.showPicker();
                 }
             }
         });
 
-        // 3. 메뉴 기능
+        // 3. 예약 완료 팝업
+        bookingForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert("알로하! 예약 신청이 정상적으로 완료되었습니다.\n현지 담당자가 확인 후 연락드리겠습니다.");
+            bookingForm.reset(); // 폼 초기화
+        });
+
+        // 4. 메뉴 및 기타 기능
         function toggleMenu() { overlay.classList.toggle('open'); }
         function goToSection(idx) {
             sections[idx].scrollIntoView({ behavior: 'smooth' });
             overlay.classList.remove('open');
         }
 
-        // 4. 스크롤 위치 감지
         container.addEventListener('scroll', () => {
             let current = 0;
             sections.forEach((section, index) => {
@@ -282,7 +283,6 @@
             dots.forEach((dot, index) => dot.classList.toggle('active', index === current));
         });
 
-        // 호버 효과
         const hoverTargets = document.querySelectorAll('button, a, input, select, .dot');
         hoverTargets.forEach(el => {
             el.addEventListener('mouseenter', () => outline.classList.add('hover'));
