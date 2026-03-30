@@ -57,13 +57,18 @@
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; text-align: center; padding: 0 10%; }
 
-        /* [배경 이미지 설정] */
-        #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600'); }
-        #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600'); }
-        /* [수정] 세 번째 페이지 배경을 하와이 스카이다이빙 테마로 변경 */
-        #booking { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1521017432521-f34f73003295?w=1600'); }
-        #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600'); }
-        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600'); }
+        /* 2. 배경 이미지 설정 (이미지 주소 최적화) */
+        #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=80'); }
+        #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=80'); }
+        
+        /* [중요 수정] 세 번째 페이지 배경 이미지 변경 (하와이 스카이다이빙) */
+        #booking { 
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1551632432-c735e8306521?auto=format&fit=crop&w=1600&q=80'); 
+            background-color: #222; /* 이미지 로딩 전 배경색 */
+        }
+
+        #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600&q=80'); }
+        #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600&q=80'); }
 
         .indicator { position: fixed; left: 25px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
         .dot { width: 10px; height: 10px; border: 1px solid #fff; background: rgba(255,255,255,0.2); transition: 0.3s; }
@@ -74,7 +79,7 @@
         .menu-overlay.open { opacity: 1; visibility: visible; }
         .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; margin: 15px 0; }
 
-        .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; }
+        .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; font-family: inherit; }
         .action-btn { background: #00d2ff; border: none; padding: 15px 30px; color: white; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 5px; }
 
@@ -96,6 +101,7 @@
 </head>
 <body>
 
+    <!-- 타겟 마우스 커서 -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -130,12 +136,12 @@
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING (배경 변경 완료) -->
+        <!-- 3. BOOKING (배경 이미지 고해상도로 재설정) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
                 <input type="text" name="name" id="book_name" placeholder="성함" required>
-                <input type="tel" name="phone" id="book_phone" placeholder="연락처" maxlength="13" required>
+                <input type="tel" name="phone" id="book_phone" placeholder="연락처 (010-0000-0000)" maxlength="13" required>
                 <input type="email" name="email" id="book_email" placeholder="이메일" required>
                 <input type="text" id="rangeDate" name="dates" placeholder="일정 선택" readonly required>
                 <select name="product" id="book_product" required>
@@ -180,7 +186,7 @@
     </div>
 
     <script>
-        // 하이픈 자동
+        // 1. 하이픈 자동
         const handlePhone = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v;
@@ -191,7 +197,7 @@
         document.getElementById('book_phone').addEventListener('input', handlePhone);
         document.getElementById('check_phone').addEventListener('input', handlePhone);
 
-        // 마우스
+        // 2. 마우스 (정확한 중앙 정렬)
         const dot = document.querySelector('.cursor-dot');
         const outline = document.querySelector('.cursor-outline');
         if (!window.matchMedia("(pointer: coarse)").matches) {
@@ -205,13 +211,13 @@
             });
         }
 
-        // 달력
+        // 3. 달력
         flatpickr("#rangeDate", {
             mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today", disableMobile: "true",
             onClose: function(s) { if(s.length===2) this.input.value = this.formatDate(s[0],"y.m.d")+"~"+this.formatDate(s[1],"y.m.d")+" ("+(Math.ceil(Math.abs(s[1]-s[0])/(86400000))+1)+"일)"; }
         });
 
-        // 예약 신청
+        // 4. 예약 신청
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -224,7 +230,7 @@
             btn.innerText = "예약 신청 완료";
         });
 
-        // 조회
+        // 5. 조회 (버그 수정 완료)
         async function handleLookup() {
             const name = document.getElementById('check_name').value.trim();
             const phone = document.getElementById('check_phone').value;
@@ -238,29 +244,27 @@
                 if (myRes.length > 0) {
                     area.innerHTML = `<h4 style='color:#007fa3; margin-bottom:10px;'>총 ${myRes.length}건</h4>`;
                     myRes.reverse().forEach(r => {
+                        const key = Object.keys(data).find(k => data[k] === r);
                         const item = document.createElement('div');
                         item.className = 'res-item';
-                        item.innerHTML = `<div class="res-info"><b>📦 ${r.product}</b><p>📅 ${r.dates}</p><p>👥 성인 ${r.adults}, 어린이 ${r.children}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${Object.keys(data).find(k=>data[k]===r)}', '${r.name}', '${r.product}', '${r.adults}', '${r.children}')">취소</button>`;
+                        item.innerHTML = `<div class="res-info"><b>📦 ${r.product}</b><p>📅 ${r.dates}</p><p>👥 성인 ${r.adults}, 어린이 ${r.children}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${key}', '${r.name}', '${r.product}')">취소</button>`;
                         area.appendChild(item);
                     });
                 } else { alert("이름이 일치하지 않습니다."); area.style.display="none"; }
             } else { alert("내역을 찾을 수 없습니다."); area.style.display="none"; }
         }
 
-        // 취소
-        async function handleCancel(phone, key, name, product, adults, children) {
+        // 6. 취소
+        async function handleCancel(phone, key, name, product) {
             if (!confirm(`[${product}] 예약을 취소하시겠습니까?`)) return;
             const cancelData = new FormData();
-            cancelData.append("상태", "⚠️ 예약 취소 알림");
-            cancelData.append("고객명", name);
-            cancelData.append("연락처", phone);
-            cancelData.append("취소상품", product);
+            cancelData.append("상태", "⚠️ 취소 알림"); cancelData.append("고객명", name); cancelData.append("연락처", phone); cancelData.append("상품", product);
             try {
                 await fetch("https://formspree.io/f/xojpdaqq", { method: 'POST', body: cancelData, headers: { 'Accept': 'application/json' } });
                 await window.deleteFromFirebase(phone, key);
                 alert("정상적으로 취소되었습니다.");
                 handleLookup();
-            } catch (err) { alert("취소 중 오류 발생"); }
+            } catch (err) { alert("오류 발생"); }
         }
 
         // 메뉴/스크롤
