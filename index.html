@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -97,15 +96,19 @@
         .res-item { background: #f0faff; padding: 15px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: #333; }
         .cancel-btn { background: #ff3b30; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-        /* 상태 배지 스타일 수정 */
-        .status-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; gap: 6px; border: none; }
-        .status-wait { background: #fff4e5; color: #ff9800; } 
-        .status-confirm { background: #e8f5e9; color: #4caf50; } 
-        .status-cancel { background: #ffebee; color: #f44336; } 
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .dot-wait { background: #ff9800; }
-        .dot-confirm { background: #4caf50; }
-        .dot-cancel { background: #f44336; }
+        /* 공통 상태 배지 스타일 */
+        .status-badge { display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: none; min-width: 85px; text-align: center; }
+        .status-wait { background: #fff4e5 !important; color: #ff9800 !important; } 
+        .status-confirm { background: #e8f5e9 !important; color: #4caf50 !important; } 
+        .status-cancel { background: #ffebee !important; color: #f44336 !important; } 
+
+        /* 관리자 테이블 내 드롭다운 특별 스타일 */
+        .admin-status-select { 
+            appearance: none; -webkit-appearance: none; cursor: pointer; outline: none;
+        }
+        .admin-status-select option {
+            background: #fff !important; color: #333 !important; font-weight: normal;
+        }
 
         .admin-box { width: 100%; max-width: 1250px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: left; overflow-x: auto; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
@@ -113,11 +116,8 @@
         .admin-table { width: 100%; border-collapse: collapse; color: #fff; font-size: 12px; min-width: 1100px; }
         .admin-table th { background: #00d2ff; color: #000; padding: 10px; }
         .admin-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .admin-table input, .admin-table select { width: 100%; background: #222; color: #fff; border: 1px solid #00d2ff; padding: 4px; border-radius: 4px; }
+        .admin-table input { width: 100%; background: #222; color: #fff; border: 1px solid #00d2ff; padding: 4px; border-radius: 4px; }
         
-        /* 관리자 상태 선택 드롭다운용 스타일 */
-        .admin-status-select { background: none !important; border: none !important; font-weight: bold; cursor: pointer; text-align: center; }
-
         .admin-btn { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; margin-right: 3px; }
         .btn-edit { background: #ffcc00; color: #000; }
         .btn-save { background: #4cd964; color: #fff; }
@@ -257,7 +257,6 @@
         function animate() { 
             tx += (mx - tx) * 0.1; 
             ty += (my - ty) * 0.1; 
-            // 파도타기 효과: Math.sin을 활용하여 위아래로 5px 정도 출렁임
             const wave = Math.sin(Date.now() * 0.003) * 6;
             trail.style.transform = `translate3d(${tx + 15}px, ${ty + 15 + wave}px, 0)`; 
             requestAnimationFrame(animate); 
@@ -305,11 +304,17 @@
             btn.innerText = "예약 신청 완료";
         });
 
+        // 상태값에 따른 CSS 클래스 반환
+        function getStatusClass(status) {
+            if(status === "예약 확정") return "status-confirm";
+            if(status === "예약 취소") return "status-cancel";
+            return "status-wait";
+        }
+
+        // 상태 배지 HTML 생성 (사용자 조회용)
         function getStatusBadge(status) {
-            let cls = "status-wait", dotCls = "dot-wait", label = status || "예약 대기";
-            if(label === "예약 확정") { cls = "status-confirm"; dotCls = "dot-confirm"; }
-            else if(label === "예약 취소") { cls = "status-cancel"; dotCls = "dot-cancel"; }
-            return `<span class="status-badge ${cls}"><span class="status-dot ${dotCls}"></span>${label}</span>`;
+            const cls = getStatusClass(status);
+            return `<span class="status-badge ${cls}">${status || '예약 대기'}</span>`;
         }
 
         async function handleLookup() {
@@ -382,10 +387,12 @@
                 const tr = document.createElement('tr');
                 const originalIdx = filteredData.indexOf(r);
                 const no = originalIdx + 1;
-
                 const statusVal = r.status || "예약 대기";
+                const statusClass = getStatusClass(statusVal);
+
+                // 상태 드롭다운 (배지 스타일 적용)
                 let statusSelectHtml = `
-                    <select class="admin-status-select" onchange="quickUpdateStatus('${r.phoneKey}', '${r.resKey}', this.value)">
+                    <select class="status-badge ${statusClass} admin-status-select" onchange="quickUpdateStatus('${r.phoneKey}', '${r.resKey}', this.value)">
                         <option value="예약 대기" ${statusVal === '예약 대기' ? 'selected' : ''}>예약 대기</option>
                         <option value="예약 확정" ${statusVal === '예약 확정' ? 'selected' : ''}>예약 확정</option>
                         <option value="예약 취소" ${statusVal === '예약 취소' ? 'selected' : ''}>예약 취소</option>
