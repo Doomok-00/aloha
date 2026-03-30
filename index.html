@@ -14,7 +14,7 @@
             .cursor-dot, .cursor-outline { display: block; }
         }
         
-        /* 모바일에서는 커스텀 커서 숨김 */
+        /* 모바일에서는 커스텀 커서 숨김 및 터치 최적화 */
         @media (max-width: 1024px) {
             * { cursor: auto; }
             .cursor-dot, .cursor-outline { display: none !important; }
@@ -27,7 +27,7 @@
             background-color: #000; 
         }
 
-        /* 2. 마우스 애니메이션 포인터 (PC 전용) */
+        /* 2. 커스텀 커서 (PC용) */
         .cursor-dot {
             width: 8px; height: 8px; background: #00d2ff; border-radius: 50%;
             position: fixed; top: 0; left: 0; pointer-events: none; z-index: 10000;
@@ -40,7 +40,7 @@
         }
         .cursor-outline.hover { width: 60px; height: 60px; background: rgba(0, 210, 255, 0.1); border-color: #00d2ff; }
 
-        /* 3. 풀페이지 컨테이너 (dvh 적용으로 잘림 방지) */
+        /* 3. 풀페이지 컨테이너 (dvh 적용으로 iOS/카톡 잘림 방지) */
         .container {
             height: 100dvh; 
             overflow-y: scroll; 
@@ -70,7 +70,7 @@
         #booking { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1600&q=80'); }
         #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?auto=format&fit=crop&w=1600&q=80'); }
 
-        /* 4. 왼쪽 인디케이터 */
+        /* 4. UI 요소 (인디케이터) */
         .indicator {
             position: fixed; left: 20px; top: 50%; transform: translateY(-50%);
             z-index: 1000; display: flex; flex-direction: column; gap: 15px;
@@ -78,7 +78,7 @@
         .dot { width: 12px; height: 12px; border: 1px solid #fff; transition: 0.3s; background: rgba(255,255,255,0.2); }
         .dot.active { background: #00d2ff; border-color: #00d2ff; transform: scale(1.3); }
 
-        /* 5. 메뉴 버튼 및 오버레이 */
+        /* 5. 메뉴 */
         .menu-toggle {
             position: fixed; top: 20px; right: 20px; z-index: 1001;
             width: 50px; height: 50px; background: #00d2ff; color: white;
@@ -111,7 +111,10 @@
             background: white; color: #333; padding: 25px; border-radius: 20px; 
             width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; 
         }
-        .booking-form input, .booking-form select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; }
+        .booking-form input, .booking-form select { 
+            padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; 
+            font-family: inherit;
+        }
         .date-group { display: flex; gap: 10px; }
 
         /* 8. 지도 및 연락처 (가려짐 방지) */
@@ -129,7 +132,7 @@
 </head>
 <body>
 
-    <!-- 마우스 애니메이션 커서 -->
+    <!-- 마우스 애니메이션 (PC 전용) -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -152,11 +155,13 @@
     </div>
 
     <div class="container" id="mainContainer">
+        <!-- 섹션 1 -->
         <section id="home">
             <h1 style="font-size: 4rem; letter-spacing: 12px; margin-bottom: 15px;">ALOHA VIBES</h1>
             <p style="font-size: 1.3rem; color: #00d2ff;">완벽한 하와이 어드벤처의 시작</p>
         </section>
 
+        <!-- 섹션 2 -->
         <section id="tours">
             <h2 style="margin-bottom: 25px; font-size: 2rem;">Premium Tours</h2>
             <div class="tour-container">
@@ -167,6 +172,7 @@
             </div>
         </section>
 
+        <!-- 섹션 3: 예약 (날짜 로직 업데이트) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px; font-size: 1.8rem;">Booking</h2>
             <form class="booking-form">
@@ -175,12 +181,12 @@
                 <input type="email" placeholder="이메일" required>
                 <div class="date-group">
                     <div style="flex:1">
-                        <label style="font-size:10px; display:block; text-align:left;">출발 날짜</label>
+                        <label style="font-size:10px; display:block; text-align:left; color:#666; margin-bottom:2px;">출발일</label>
                         <input type="date" id="startDate" required>
                     </div>
                     <div style="flex:1">
-                        <label style="font-size:10px; display:block; text-align:left;">종료 날짜</label>
-                        <input type="date" id="endDate" required title="출발 날짜를 먼저 선택하세요">
+                        <label style="font-size:10px; display:block; text-align:left; color:#666; margin-bottom:2px;">종료일</label>
+                        <input type="date" id="endDate" required>
                     </div>
                 </div>
                 <select required>
@@ -194,6 +200,7 @@
             </form>
         </section>
 
+        <!-- 섹션 4 -->
         <section id="contact">
             <div class="contact-info">
                 <div class="map-box">
@@ -217,6 +224,13 @@
         const sections = document.querySelectorAll('section');
         const dots = document.querySelectorAll('.dot');
 
+        // [추가] 오늘 날짜 가져오기 (YYYY-MM-DD 형식)
+        const today = new Date().toISOString().split('T')[0];
+        
+        // [수정] 페이지 로드 시 시작일의 최소값을 오늘로 설정 (과거 날짜 선택 방지)
+        // 단, 'value'를 주지 않으므로 자동으로 오늘 날짜가 채워지지는 않음
+        startDate.min = today;
+
         // 1. 마우스 애니메이션 (PC 전용)
         window.addEventListener('mousemove', (e) => {
             if (window.innerWidth > 1024) {
@@ -231,17 +245,17 @@
 
         // 2. 달력 자동화 및 날짜 제한 (핵심 수정)
         startDate.addEventListener('change', () => {
-            const selectedDate = startDate.value;
-            if (selectedDate) {
-                // 종료 날짜의 최소값(min)을 시작 날짜로 설정
-                endDate.min = selectedDate; 
+            const val = startDate.value;
+            if (val) {
+                // 종료일의 최소 날짜를 시작일로 설정
+                endDate.min = val; 
                 
-                // 만약 기존에 입력된 종료 날짜가 시작 날짜보다 빠르면 초기화
-                if (endDate.value && endDate.value < selectedDate) {
+                // 만약 종료일이 시작일보다 앞서 있다면 초기화
+                if (endDate.value && endDate.value < val) {
                     endDate.value = "";
                 }
                 
-                // 자동으로 종료 날짜 달력 열기
+                // 자동으로 종료일 달력 열기
                 endDate.focus();
                 if ('showPicker' in HTMLInputElement.prototype) {
                     try { endDate.showPicker(); } catch (e) {}
@@ -263,6 +277,13 @@
                 if (container.scrollTop >= section.offsetTop - 50) current = index;
             });
             dots.forEach((dot, index) => dot.classList.toggle('active', index === current));
+        });
+
+        // 호버 효과
+        const hoverTargets = document.querySelectorAll('button, a, input, select, .dot');
+        hoverTargets.forEach(el => {
+            el.addEventListener('mouseenter', () => outline.classList.add('hover'));
+            el.addEventListener('mouseleave', () => outline.classList.remove('hover'));
         });
     </script>
 </body>
