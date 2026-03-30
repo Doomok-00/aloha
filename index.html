@@ -11,139 +11,104 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
-    <!-- 파이어베이스 연결 (사용자 설정값 적용) -->
+    <!-- 파이어베이스 연결 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getDatabase, ref, push, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDHC3RcbJqzcUqybUzkGBWiIEJ3-gT75zY",
             authDomain: "aloha-a334e.firebaseapp.com",
             databaseURL: "https://aloha-a334e-default-rtdb.firebaseio.com",
             projectId: "aloha-a334e",
-            storageBucket: "aloha-a334e.firebasestorage.app",
-            messagingSenderId: "76882503799",
             appId: "1:76882503799:web:a1d9c218dd46bee3847e72"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
         window.saveToFirebase = async (data) => {
             const key = data.phone.replace(/-/g, "");
-            await set(ref(db, 'reservations/' + key), data);
+            await set(push(ref(db, 'reservations/' + key)), data);
         };
-
         window.getFromFirebase = async (phone) => {
             const key = phone.replace(/-/g, "");
-            const dbRef = ref(getDatabase());
-            const snapshot = await get(child(dbRef, `reservations/${key}`));
+            const snapshot = await get(child(ref(getDatabase()), `reservations/${key}`));
             return snapshot.exists() ? snapshot.val() : null;
         };
     </script>
 
     <style>
-        /* 1. 기본 스타일 및 배경 */
+        /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
         
-        /* 모바일 터치 기기 커서 차단 */
-        @media (pointer: coarse) {
-            .cursor-dot, .cursor-outline { display: none !important; }
-            * { cursor: auto !important; }
-        }
-
-        /* PC 커스텀 커서 스타일 */
+        /* 2. [변경] 타겟형 마우스 포인터 디자인 (원 안의 점) */
         @media (pointer: fine) {
             * { cursor: none !important; }
             .cursor-dot {
-                width: 6px; height: 6px; background: #fff; border-radius: 50%;
+                width: 6px; height: 6px; background: #00d2ff; border-radius: 50%;
                 position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000;
-                mix-blend-mode: difference; /* 배경색에 따라 반전되는 효과 */
+                transform: translate(-50%, -50%); /* 정확한 중앙 정렬 */
             }
             .cursor-outline {
-                width: 40px; height: 40px; border: 1.5px solid rgba(255, 255, 255, 0.5); border-radius: 50%;
+                width: 34px; height: 34px; border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 50%;
                 position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999;
-                transition: transform 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+                transform: translate(-50%, -50%); /* 정확한 중앙 정렬 */
+                transition: width 0.2s, height 0.2s, border-color 0.2s, background 0.2s;
             }
-            /* 호버 시 커서 변화 */
+            /* 호버 시 점을 감싸며 원이 강조됨 */
             .cursor-outline.hover {
-                transform: scale(1.5);
-                background: rgba(255, 255, 255, 0.1);
+                width: 50px; height: 50px;
                 border-color: #00d2ff;
+                background: rgba(0, 210, 255, 0.05);
             }
         }
 
-        html, body { 
-            height: 100%; 
-            overflow: hidden; 
-            font-family: 'Pretendard', -apple-system, sans-serif; 
-            background-color: #050a0f; /* 딥 다크 블루 배경 */
-            color: #fff; 
-        }
+        html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #050a0f; color: #fff; }
 
-        /* 2. 레이아웃 및 배경 섹션 */
+        /* 3. 레이아웃 및 배경 섹션 */
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-        section { 
-            height: 100dvh; width: 100%; scroll-snap-align: start; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            position: relative; background-size: cover; background-position: center; 
-            text-align: center; padding: 0 10%;
-            transition: background 0.5s ease;
-        }
+        section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; text-align: center; padding: 0 10%; }
 
-        /* 고급스러운 하와이 배경 이미지 세팅 */
+        /* [변경] 배경 이미지 최적화 */
         #home { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=80'); }
-        #tours { background-image: linear-gradient(rgba(5,10,15,0.8), rgba(5,10,15,0.8)), url('https://images.unsplash.com/photo-1542259005453-d93f3b203d98?w=1600&q=80'); }
-        #booking { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=80'); }
-        #check { background-image: linear-gradient(rgba(5,10,15,0.85), rgba(5,10,15,0.85)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600&q=80'); }
+        /* 투어 페이지 배경 이미지 추가 */
+        #tours { background-image: linear-gradient(rgba(5,10,15,0.7), rgba(5,10,15,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=80'); }
+        #booking { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1542259005453-d93f3b203d98?w=1600&q=80'); }
+        #check { background-image: linear-gradient(rgba(5,10,15,0.8), rgba(5,10,15,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600&q=80'); }
         #contact { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600&q=80'); }
 
-        /* 3. UI 컴포넌트 */
+        /* UI 버튼 및 카드 */
         .indicator { position: fixed; left: 25px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
         .dot { width: 10px; height: 10px; border: 1px solid rgba(255,255,255,0.4); border-radius: 2px; transition: 0.3s; background: transparent; }
         .dot.active { background: #00d2ff; border-color: #00d2ff; transform: scale(1.4); }
 
         .menu-toggle { position: fixed; top: 25px; right: 25px; z-index: 1001; width: 50px; height: 50px; background: rgba(0,210,255,0.8); color: white; border: none; font-size: 28px; border-radius: 12px; backdrop-filter: blur(10px); }
-        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,10,15,0.95); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,10,15,0.95); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.4s; }
         .menu-overlay.open { opacity: 1; visibility: visible; }
-        .menu-link { font-size: 3rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 10px; margin: 15px 0; transition: 0.3s; }
-        .menu-link:hover { color: #00d2ff; transform: translateX(10px); }
+        .menu-link { font-size: 3rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 10px; margin: 15px 0; }
 
-        /* 투어 카드 디자인 (버튼 삭제) */
+        /* 카드 디자인 */
         .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; margin-bottom: 30px; }
-        .tour-card { 
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); 
-            padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
-            transition: 0.3s ease;
-        }
-        .tour-card:hover { transform: translateY(-5px); border-color: rgba(0,210,255,0.5); background: rgba(255,255,255,0.08); }
-        .tour-card h3 { color: #00d2ff; margin-bottom: 8px; font-size: 1.3rem; letter-spacing: -0.5px; }
-        .tour-card .price { font-size: 1.4rem; font-weight: 700; color: #ffd700; }
-
-        /* 하단 큰 예약 버튼 */
-        .reserve-big-btn { 
-            background: linear-gradient(135deg, #00d2ff, #007fa3); border: none; 
-            padding: 18px 60px; color: white; border-radius: 50px; font-weight: 800; 
-            font-size: 1.2rem; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(0,210,255,0.3);
-        }
-        .reserve-big-btn:hover { transform: scale(1.05); box-shadow: 0 15px 30px rgba(0,210,255,0.5); }
-
-        /* 폼 스타일 */
-        .form-card { background: #fff; color: #111; padding: 35px; border-radius: 24px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-        .form-card input, .form-card select { padding: 14px; border: 1px solid #eee; border-radius: 12px; width: 100%; font-size: 16px; background: #f8f9fa; }
-        .action-btn { background: #00d2ff; border: none; padding: 15px; color: white; border-radius: 12px; font-weight: 700; font-size: 17px; margin-top: 10px; }
-
-        #resultArea { margin-top: 15px; padding: 15px; background: #f0faff; border-radius: 12px; border-left: 5px solid #00d2ff; display: none; text-align: left; }
+        .tour-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(15px); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .reserve-big-btn { background: linear-gradient(135deg, #00d2ff, #007fa3); border: none; padding: 18px 60px; color: white; border-radius: 50px; font-weight: 800; font-size: 1.2rem; }
         
-        .map-box { width: 100%; height: 400px; border-radius: 24px; overflow: hidden; border: 2px solid rgba(0,210,255,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .form-card { background: #fff; color: #111; padding: 35px; border-radius: 24px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; }
+        .form-card input, .form-card select { padding: 14px; border: 1px solid #eee; border-radius: 12px; width: 100%; font-size: 16px; background: #f8f9fa; }
+        .action-btn { background: #00d2ff; border: none; padding: 15px; color: white; border-radius: 12px; font-weight: 700; }
 
-        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } .menu-link { font-size: 2rem; } }
+        #resultArea { margin-top: 15px; width: 100%; max-height: 220px; overflow-y: auto; text-align: left; display: none; }
+        .res-item { background: #f0faff; padding: 12px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 8px; }
+        .res-item p { color: #333; font-size: 13px; margin: 2px 0; }
+
+        .map-box { width: 100%; height: 400px; border-radius: 24px; overflow: hidden; border: 2px solid rgba(0,210,255,0.3); }
+
+        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } }
     </style>
 </head>
 <body>
 
-    <!-- 마우스 커서 -->
+    <!-- 타겟 마우스 커서 -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -165,29 +130,25 @@
     </div>
 
     <div class="container" id="mainContainer">
-        <section id="home">
-            <h1 style="font-size: 4.5rem; font-weight: 900; letter-spacing: 15px; margin-bottom: 20px;">ALOHA VIBES</h1>
-            <p style="font-size: 1.4rem; color: #00d2ff; font-weight: 300; letter-spacing: 2px;">Premium Hawaii Travel Experience</p>
-        </section>
+        <section id="home"><h1>ALOHA VIBES</h1><p style="color: #00d2ff; font-weight:300;">Premium Hawaii Travel</p></section>
         
-        <!-- 투어 섹션 (버튼 통합) -->
+        <!-- 2. TOURS (배경 추가 및 버튼 통합) -->
         <section id="tours">
             <h2 style="margin-bottom: 40px; font-size: 2.2rem; letter-spacing: 2px;">Premium Selection</h2>
             <div class="tour-container">
-                <div class="tour-card"><h3>오아후 섬 투어</h3><p class="price">$149</p></div>
-                <div class="tour-card"><h3>헬기 투어</h3><p class="price">$320</p></div>
-                <div class="tour-card"><h3>스노클링</h3><p class="price">$85</p></div>
-                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p class="price">$250</p></div>
+                <div class="tour-card"><h3>오아후 섬 투어</h3><p style="color:#ffd700;">$149</p></div>
+                <div class="tour-card"><h3>헬기 투어</h3><p style="color:#ffd700;">$320</p></div>
+                <div class="tour-card"><h3>스노클링</h3><p style="color:#ffd700;">$85</p></div>
+                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p style="color:#ffd700;">$250</p></div>
             </div>
-            <!-- 하단 통합 버튼 -->
             <button class="reserve-big-btn" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
         <section id="booking">
-            <h2 style="margin-bottom: 25px;">Booking Request</h2>
+            <h2 style="margin-bottom: 25px;">Booking</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
                 <input type="text" name="name" id="book_name" placeholder="성함" required>
-                <input type="tel" name="phone" id="book_phone" placeholder="연락처 (010-0000-0000)" maxlength="13" required>
+                <input type="tel" name="phone" id="book_phone" placeholder="연락처" maxlength="13" required>
                 <input type="email" name="email" id="book_email" placeholder="이메일" required>
                 <input type="text" id="rangeDate" name="dates" placeholder="여행 기간 선택" readonly required>
                 <select name="product" id="book_product" required>
@@ -203,45 +164,34 @@
             <h2 style="margin-bottom: 25px;">Check Reservation</h2>
             <div class="form-card">
                 <input type="text" id="check_name" placeholder="성함">
-                <input type="tel" id="check_phone" placeholder="연락처 (010-0000-0000)" maxlength="13">
+                <input type="tel" id="check_phone" placeholder="연락처" maxlength="13">
                 <button type="button" class="action-btn" onclick="handleLookup()">내역 조회하기</button>
-                <div id="resultArea">
-                    <h4 style="color:#007fa3; margin-bottom:5px;">조회 결과</h4>
-                    <p id="res_product" style="font-size:14px; margin-bottom:3px; color:#333;"></p>
-                    <p id="res_date" style="font-size:14px; color:#333;"></p>
-                </div>
+                <div id="resultArea"></div>
             </div>
         </section>
 
         <section id="contact">
             <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
-            <p style="margin-top:15px; font-size:14px; color:rgba(255,255,255,0.7);">📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
+            <p style="margin-top:15px; color:rgba(255,255,255,0.7);">📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
         </section>
     </div>
 
     <script>
-        // 커스텀 커서 로직
+        // 마우스 커서 스크립트
         const dot = document.querySelector('.cursor-dot');
         const outline = document.querySelector('.cursor-outline');
-        const isTouch = window.matchMedia("(pointer: coarse)").matches;
-
-        if (!isTouch) {
+        if (!window.matchMedia("(pointer: coarse)").matches) {
             window.addEventListener('mousemove', (e) => {
-                const posX = e.clientX;
-                const posY = e.clientY;
-                dot.style.left = posX + 'px';
-                dot.style.top = posY + 'px';
-                outline.style.left = posX + 'px';
-                outline.style.top = posY + 'px';
+                dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px';
+                outline.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 300, fill: "forwards" });
             });
-            // 호버 타겟 확대 효과
-            document.querySelectorAll('button, a, input, select, .dot, .tour-card').forEach(el => {
+            document.querySelectorAll('button, a, input, select, .tour-card, .dot').forEach(el => {
                 el.addEventListener('mouseenter', () => outline.classList.add('hover'));
                 el.addEventListener('mouseleave', () => outline.classList.remove('hover'));
             });
         }
 
-        // 연락처 자동 하이픈
+        // 하이픈
         const handlePhone = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v;
@@ -258,16 +208,11 @@
             onClose: function(s) { if(s.length===2) this.input.value = this.formatDate(s[0],"y.m.d")+"~"+this.formatDate(s[1],"y.m.d")+" ("+(Math.ceil(Math.abs(s[1]-s[0])/(86400000))+1)+"일)"; }
         });
 
-        // 예약 및 데이터베이스 저장
+        // 예약 신청
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            const bookingData = {
-                name: document.getElementById('book_name').value,
-                phone: document.getElementById('book_phone').value,
-                dates: document.getElementById('rangeDate').value,
-                product: document.getElementById('book_product').value
-            };
+            const bookingData = { name: document.getElementById('book_name').value, phone: document.getElementById('book_phone').value, dates: document.getElementById('rangeDate').value, product: document.getElementById('book_product').value, time: new Date().toLocaleString() };
             btn.innerText = "전송 중...";
             try {
                 const response = await fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'Accept': 'application/json' } });
@@ -276,23 +221,33 @@
                     alert("알로하! 예약 신청이 완료되었습니다.");
                     this.reset();
                 }
-            } catch (err) { alert("오류가 발생했습니다."); }
+            } catch (err) { alert("오류 발생"); }
             btn.innerText = "예약 신청 완료";
         });
 
-        // 실시간 조회
+        // 다중 조회
         async function handleLookup() {
             const name = document.getElementById('check_name').value;
             const phone = document.getElementById('check_phone').value;
+            const resultArea = document.getElementById('resultArea');
+            resultArea.innerHTML = "<p style='color:#333; text-align:center;'>조회 중...</p>";
+            resultArea.style.display = "block";
             const data = await window.getFromFirebase(phone);
-            if (data && data.name === name) {
-                document.getElementById('res_product').innerText = "📦 상품: " + data.product;
-                document.getElementById('res_date').innerText = "📅 일정: " + data.dates;
-                document.getElementById('resultArea').style.display = "block";
-            } else { alert("예약 정보를 찾을 수 없습니다."); }
+            if (data) {
+                const myRes = Object.values(data).filter(r => r.name === name);
+                if (myRes.length > 0) {
+                    resultArea.innerHTML = `<h4 style='color:#007fa3; margin-bottom:10px;'>총 ${myRes.length}건</h4>`;
+                    myRes.forEach(res => {
+                        const item = document.createElement('div');
+                        item.className = 'res-item';
+                        item.innerHTML = `<b>📦 ${res.product}</b><p>📅 일정: ${res.dates}</p><p style='font-size:11px; color:#999;'>${res.time}</p>`;
+                        resultArea.appendChild(item);
+                    });
+                } else { alert("정보가 일치하지 않습니다."); resultArea.style.display = "none"; }
+            } else { alert("내역을 찾을 수 없습니다."); resultArea.style.display = "none"; }
         }
 
-        // 메뉴/스크롤
+        // 스크롤 및 메뉴
         function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('open'); }
         function goToSection(i) { document.querySelectorAll('section')[i].scrollIntoView({ behavior: 'smooth' }); if(document.getElementById('menuOverlay').classList.contains('open')) toggleMenu(); }
         document.getElementById('mainContainer').addEventListener('scroll', () => {
