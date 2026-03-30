@@ -5,43 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>ALOHA VIBES - 하와이 전문 여행사</title>
     
-    <!-- 달력 라이브러리 -->
+    <!-- 라이브러리 (달력 & 이메일 전송 대비) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
     <style>
-        /* [기존 디자인 및 레이아웃 유지] */
+        /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
         @media (pointer: fine) { * { cursor: none !important; } .cursor-dot, .cursor-outline { display: block; } }
-        html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; }
+        html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; color: #fff; }
+        
+        /* 2. 마우스 커서 */
         .cursor-dot { width: 8px; height: 8px; background: #00d2ff; border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000; transform: translate(-50%, -50%); }
         .cursor-outline { width: 30px; height: 30px; border: 2px solid rgba(0, 210, 255, 0.5); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; transform: translate(-50%, -50%); }
         .cursor-outline.hover { width: 60px; height: 60px; background: rgba(0, 210, 255, 0.1); border-color: #00d2ff; }
         .flatpickr-calendar { z-index: 99999 !important; }
+
+        /* 3. 레이아웃 */
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-        section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; color: white; text-align: center; padding: 0 10%; }
+        section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; text-align: center; padding: 0 10%; }
+
+        /* 배경 이미지 */
         #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600'); }
         #tours { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1542259005453-d93f3b203d98?w=1600'); }
         #booking { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600'); }
+        #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600'); }
         #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600'); }
+
+        /* 4. UI 요소 */
         .indicator { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
         .dot { width: 12px; height: 12px; border: 1px solid #fff; background: rgba(255,255,255,0.2); transition: 0.3s; }
         .dot.active { background: #00d2ff; border-color: #00d2ff; transform: scale(1.3); }
+
         .menu-toggle { position: fixed; top: 20px; right: 20px; z-index: 1001; width: 50px; height: 50px; background: #00d2ff; color: white; border: none; font-size: 30px; border-radius: 5px; }
-        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.4s ease; }
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.4s ease; }
         .menu-overlay.open { opacity: 1; visibility: visible; }
-        .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; margin: 15px 0; }
-        .booking-form { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
-        .booking-form input, .booking-form select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; }
-        #rangeDate { background: #f9f9f9; border: 2px solid #00d2ff !important; font-weight: bold; text-align: center; color: #007fa3; }
-        .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 850px; }
-        .tour-card { background: rgba(255,255,255,0.12); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); }
-        .book-btn { background: #00d2ff; border: none; padding: 10px 15px; color: white; border-radius: 5px; font-weight: bold; margin-top: 5px; }
-        .map-box { width: 100%; height: 250px; border-radius: 15px; overflow: hidden; border: 2px solid #00d2ff; margin-bottom: 15px; }
-        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } }
+        .menu-link { font-size: 2rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 3px; margin: 15px 0; }
+
+        /* 5. 폼 스타일 */
+        .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
+        .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; font-family: inherit; }
+        .action-btn { background: #00d2ff; border: none; padding: 12px; color: white; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 5px; }
+
+        /* 결과창 */
+        #resultArea { margin-top: 15px; padding: 15px; background: #f0faff; border-radius: 10px; border-left: 5px solid #00d2ff; display: none; text-align: left; }
+        #resultArea h4 { color: #007fa3; margin-bottom: 5px; }
+        #resultArea p { font-size: 14px; margin-bottom: 3px; }
+
+        @media (max-width: 768px) { section { padding: 0 40px; } h1 { font-size: 2.5rem !important; } .menu-link { font-size: 1.5rem; } }
     </style>
 </head>
 <body>
@@ -54,7 +68,8 @@
         <a href="javascript:void(0)" class="menu-link" onclick="goToSection(0)">HOME</a>
         <a href="javascript:void(0)" class="menu-link" onclick="goToSection(1)">TOURS</a>
         <a href="javascript:void(0)" class="menu-link" onclick="goToSection(2)">BOOKING</a>
-        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(3)">LOCATION</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(3)">CHECK</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(4)">LOCATION</a>
     </div>
 
     <div class="indicator">
@@ -62,46 +77,67 @@
         <div class="dot" onclick="goToSection(1)"></div>
         <div class="dot" onclick="goToSection(2)"></div>
         <div class="dot" onclick="goToSection(3)"></div>
+        <div class="dot" onclick="goToSection(4)"></div>
     </div>
 
     <div class="container" id="mainContainer">
-        <section id="home"><h1>ALOHA VIBES</h1><p>완벽한 하와이 어드벤처의 시작</p></section>
+        <!-- 1. HOME -->
+        <section id="home"><h1>ALOHA VIBES</h1><p>하와이의 푸른 꿈, 현실이 되는 곳</p></section>
         
+        <!-- 2. TOURS -->
         <section id="tours">
             <h2>Premium Tours</h2>
-            <div class="tour-container">
-                <div class="tour-card"><h3>오아후 섬 투어</h3><p>$149</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
-                <div class="tour-card"><h3>헬기 투어</h3><p>$320</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
-                <div class="tour-card"><h3>스노클링</h3><p>$85</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
-                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p>$250</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
+            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-top:20px; width:100%; max-width:800px;">
+                <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px;"><h3>오아후 투어</h3><p>$149</p></div>
+                <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px;"><h3>헬기 투어</h3><p>$320</p></div>
+                <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px;"><h3>스노클링</h3><p>$85</p></div>
+                <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px;"><h3>스카이다이빙</h3><p>$250</p></div>
             </div>
+            <button class="action-btn" style="width:200px; margin-top:20px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 예약 양식 -->
+        <!-- 3. BOOKING (예약 신청) -->
         <section id="booking">
-            <h2 style="margin-bottom: 20px;">Booking</h2>
-            <!-- action 주소는 본인의 Formspree ID로 유지하세요 -->
-            <form action="https://formspree.io/f/여기에_복사한_ID를_넣으세요" method="POST" class="booking-form" id="resForm">
-                <input type="text" name="name" placeholder="성함" required>
-                <input type="tel" name="phone" placeholder="연락처" required>
-                <input type="email" name="email" placeholder="이메일" required>
-                <input type="text" id="rangeDate" name="dates" placeholder="날짜를 선택하세요" readonly required>
-                <select name="product" required>
+            <h2 style="margin-bottom: 20px;">Booking Request</h2>
+            <form action="https://formspree.io/f/여기에_ID_넣으세요" method="POST" class="form-card" id="resForm">
+                <input type="text" name="name" id="book_name" placeholder="성함" required>
+                <input type="tel" name="phone" id="book_phone" placeholder="연락처 (-없이 입력)" required>
+                <input type="email" name="email" id="book_email" placeholder="이메일" required>
+                <input type="text" id="rangeDate" name="dates" placeholder="일정 선택" readonly required>
+                <select name="product" id="book_product" required>
                     <option value="">상품 선택</option>
                     <option>오아후 섬 일주</option><option>섬 전체 헬기 투어</option>
                     <option>하나우마베이 스노클링</option><option>하와이 스카이다이빙</option>
                 </select>
-                <button type="submit" class="book-btn" id="submitBtn" style="height: 45px;">예약 신청 완료</button>
+                <button type="submit" class="action-btn" id="submitBtn">예약 신청 완료</button>
             </form>
         </section>
 
-        <section id="contact">
-            <div class="contact-info" style="width: 100%; max-width: 550px;">
-                <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
-                <div style="background:rgba(0,0,0,0.75); padding:15px; border-radius:15px; text-align:left; font-size:14px;">
-                    <p>📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
-                    <p>📞 +1 808-123-4567 | 📧 jangyh89@gmail.com</p>
+        <!-- 4. CHECK (예약 확인 - 새로 추가된 부분) -->
+        <section id="check">
+            <h2 style="margin-bottom: 20px;">Check Reservation</h2>
+            <div class="form-card">
+                <p style="font-size: 13px; color: #666; margin-bottom: 5px;">신청 시 입력한 이름과 연락처를 입력하세요.</p>
+                <input type="text" id="check_name" placeholder="성함">
+                <input type="tel" id="check_phone" placeholder="연락처 (-없이 입력)">
+                <button type="button" class="action-btn" onclick="lookupReservation()">조회하기</button>
+                
+                <!-- 조회 결과가 나타나는 곳 -->
+                <div id="resultArea">
+                    <h4 id="res_title">조회 완료</h4>
+                    <p id="res_product"></p>
+                    <p id="res_date"></p>
+                    <p style="font-size: 11px; color: #999; margin-top: 5px;">* 실제 예약 확정 여부는 메일을 확인해주세요.</p>
                 </div>
+            </div>
+        </section>
+
+        <!-- 5. LOCATION -->
+        <section id="contact">
+            <div class="form-card" style="background:none; color:white;">
+                <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
+                <p style="margin-top:15px;">📍 2335 Kalākaua Ave, Honolulu, HI</p>
+                <p>📞 +1 808-123-4567 | 📧 jangyh89@gmail.com</p>
             </div>
         </section>
     </div>
@@ -112,9 +148,8 @@
         const overlay = document.getElementById('menuOverlay');
         const container = document.getElementById('mainContainer');
         const resForm = document.getElementById('resForm');
-        const submitBtn = document.getElementById('submitBtn');
 
-        // 1. 기간 선택 달력
+        // 1. 달력 설정
         flatpickr("#rangeDate", {
             mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today", disableMobile: "true",
             onClose: function(selectedDates, dateStr, instance) {
@@ -125,38 +160,60 @@
             }
         });
 
-        // 2. [핵심 수정] 이메일 비동기 전송 로직 (자체 팝업용)
-        resForm.addEventListener('submit', async function(event) {
-            event.preventDefault(); // 페이지 이동 차단
-            
+        // 2. 예약 신청 및 데이터 저장 (LocalStorage 사용)
+        resForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "전송 중...";
+
             const formData = new FormData(this);
-            submitBtn.innerText = "전송 중...";
-            submitBtn.disabled = true;
+            const bookingData = {
+                name: document.getElementById('book_name').value,
+                phone: document.getElementById('book_phone').value,
+                dates: document.getElementById('rangeDate').value,
+                product: document.getElementById('book_product').value
+            };
 
             try {
-                const response = await fetch(this.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Accept': 'application/json' }
-                });
-
+                const response = await fetch(this.action, { method: 'POST', body: formData, headers: { 'Accept': 'application/json' } });
                 if (response.ok) {
-                    // 전송 성공 시
-                    alert("알로하! 예약 신청이 성공적으로 접수되었습니다.\n확인 후 jangyh89@gmail.com에서 답변 드리겠습니다.");
-                    resForm.reset(); // 폼 초기화
-                } else {
-                    // 에러 발생 시
-                    alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+                    // [핵심] 성공 시 브라우저에 데이터 저장 (연락처를 키값으로 사용)
+                    localStorage.setItem('aloha_res_' + bookingData.phone, JSON.stringify(bookingData));
+                    
+                    alert("알로하! 예약 신청이 완료되었습니다.\n이제 'CHECK' 메뉴에서 조회가 가능합니다.");
+                    resForm.reset();
                 }
-            } catch (error) {
-                alert("네트워크 오류가 발생했습니다.");
-            } finally {
-                submitBtn.innerText = "예약 신청 완료";
-                submitBtn.disabled = false;
-            }
+            } catch (err) { alert("오류가 발생했습니다."); }
+            btn.innerText = "예약 신청 완료";
         });
 
-        // 3. 마우스 커서 (PC용)
+        // 3. 예약 조회 함수
+        function lookupReservation() {
+            const name = document.getElementById('check_name').value;
+            const phone = document.getElementById('check_phone').value;
+            const resultArea = document.getElementById('resultArea');
+
+            // 저장된 데이터 불러오기
+            const savedData = localStorage.getItem('aloha_res_' + phone);
+
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                if (data.name === name) {
+                    // 데이터 일치 시 결과 표시
+                    document.getElementById('res_product').innerText = "📦 상품: " + data.product;
+                    document.getElementById('res_date').innerText = "📅 일정: " + data.dates;
+                    resultArea.style.display = "block";
+                } else {
+                    alert("정보가 일치하지 않습니다.");
+                    resultArea.style.display = "none";
+                }
+            } else {
+                alert("예약 내역을 찾을 수 없습니다.");
+                resultArea.style.display = "none";
+            }
+        }
+
+        // 4. 마우스 & 메뉴 & 스크롤 (기존 로직)
         const isTouch = window.matchMedia("(pointer: coarse)").matches;
         if (!isTouch) {
             window.addEventListener('mousemove', (e) => {
@@ -164,8 +221,6 @@
                 outline.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 250, fill: "forwards" });
             });
         }
-
-        // 4. 메뉴 및 스크롤
         function toggleMenu() { overlay.classList.toggle('open'); }
         function goToSection(idx) { document.querySelectorAll('section')[idx].scrollIntoView({ behavior: 'smooth' }); overlay.classList.remove('open'); }
         container.addEventListener('scroll', () => {
