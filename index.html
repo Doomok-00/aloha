@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>ALOHA VIBES - 하와이 전문 여행사</title>
     
-    <!-- 라이브러리 (달력 & 이메일 전송 대비) -->
+    <!-- 라이브러리 (달력 & 이메일) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -18,7 +18,7 @@
         @media (pointer: fine) { * { cursor: none !important; } .cursor-dot, .cursor-outline { display: block; } }
         html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; color: #fff; }
         
-        /* 2. 마우스 커서 */
+        /* 2. 마우스 커서 (PC 전용) */
         .cursor-dot { width: 8px; height: 8px; background: #00d2ff; border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000; transform: translate(-50%, -50%); }
         .cursor-outline { width: 30px; height: 30px; border: 2px solid rgba(0, 210, 255, 0.5); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; transform: translate(-50%, -50%); }
         .cursor-outline.hover { width: 60px; height: 60px; background: rgba(0, 210, 255, 0.1); border-color: #00d2ff; }
@@ -53,7 +53,6 @@
         /* 결과창 */
         #resultArea { margin-top: 15px; padding: 15px; background: #f0faff; border-radius: 10px; border-left: 5px solid #00d2ff; display: none; text-align: left; }
         #resultArea h4 { color: #007fa3; margin-bottom: 5px; }
-        #resultArea p { font-size: 14px; margin-bottom: 3px; }
 
         @media (max-width: 768px) { section { padding: 0 40px; } h1 { font-size: 2.5rem !important; } .menu-link { font-size: 1.5rem; } }
     </style>
@@ -93,15 +92,16 @@
                 <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px;"><h3>스노클링</h3><p>$85</p></div>
                 <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px;"><h3>스카이다이빙</h3><p>$250</p></div>
             </div>
-            <button class="action-btn" style="width:200px; margin-top:20px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING (예약 신청) -->
+        <!-- 3. BOOKING (이메일 전송 부분 핵심 수정) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
+            <!-- [중요] 아래 action 주소에 Formspree에서 만든 주소를 꼭 넣어주세요! -->
             <form action="https://formspree.io/f/여기에_ID_넣으세요" method="POST" class="form-card" id="resForm">
                 <input type="text" name="name" id="book_name" placeholder="성함" required>
-                <input type="tel" name="phone" id="book_phone" placeholder="연락처 (-없이 입력)" required>
+                <!-- 연락처 자동 하이픈 적용 -->
+                <input type="tel" name="phone" id="book_phone" placeholder="연락처 (010-0000-0000)" maxlength="13" required>
                 <input type="email" name="email" id="book_email" placeholder="이메일" required>
                 <input type="text" id="rangeDate" name="dates" placeholder="일정 선택" readonly required>
                 <select name="product" id="book_product" required>
@@ -113,21 +113,17 @@
             </form>
         </section>
 
-        <!-- 4. CHECK (예약 확인 - 새로 추가된 부분) -->
+        <!-- 4. CHECK (예약 확인) -->
         <section id="check">
             <h2 style="margin-bottom: 20px;">Check Reservation</h2>
             <div class="form-card">
-                <p style="font-size: 13px; color: #666; margin-bottom: 5px;">신청 시 입력한 이름과 연락처를 입력하세요.</p>
                 <input type="text" id="check_name" placeholder="성함">
-                <input type="tel" id="check_phone" placeholder="연락처 (-없이 입력)">
+                <input type="tel" id="check_phone" placeholder="연락처 (하이픈 포함)" maxlength="13">
                 <button type="button" class="action-btn" onclick="lookupReservation()">조회하기</button>
-                
-                <!-- 조회 결과가 나타나는 곳 -->
                 <div id="resultArea">
                     <h4 id="res_title">조회 완료</h4>
                     <p id="res_product"></p>
                     <p id="res_date"></p>
-                    <p style="font-size: 11px; color: #999; margin-top: 5px;">* 실제 예약 확정 여부는 메일을 확인해주세요.</p>
                 </div>
             </div>
         </section>
@@ -145,11 +141,24 @@
     <script>
         const dot = document.querySelector('.cursor-dot');
         const outline = document.querySelector('.cursor-outline');
-        const overlay = document.getElementById('menuOverlay');
         const container = document.getElementById('mainContainer');
         const resForm = document.getElementById('resForm');
+        const bookPhone = document.getElementById('book_phone');
+        const checkPhone = document.getElementById('check_phone');
 
-        // 1. 달력 설정
+        // [기능 1] 연락처 자동 하이픈 생성 함수
+        const handlePhoneInput = (e) => {
+            let value = e.target.value.replace(/[^0-9]/g, "");
+            let result = "";
+            if (value.length < 4) result = value;
+            else if (value.length < 8) result = value.substr(0, 3) + "-" + value.substr(3);
+            else result = value.substr(0, 3) + "-" + value.substr(3, 4) + "-" + value.substr(7);
+            e.target.value = result;
+        };
+        bookPhone.addEventListener('input', handlePhoneInput);
+        checkPhone.addEventListener('input', handlePhoneInput);
+
+        // [기능 2] 달력 설정
         flatpickr("#rangeDate", {
             mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today", disableMobile: "true",
             onClose: function(selectedDates, dateStr, instance) {
@@ -160,12 +169,19 @@
             }
         });
 
-        // 2. 예약 신청 및 데이터 저장 (LocalStorage 사용)
+        // [기능 3] 이메일 전송 및 로컬 저장
         resForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "전송 중...";
+            const url = this.action;
+            
+            // [검증] ID가 입력되지 않았을 때 안내
+            if (url.includes("여기에_ID_넣으세요")) {
+                alert("Formspree ID가 입력되지 않았습니다. 코드를 확인해주세요.");
+                return;
+            }
 
+            btn.innerText = "전송 중...";
             const formData = new FormData(this);
             const bookingData = {
                 name: document.getElementById('book_name').value,
@@ -175,45 +191,45 @@
             };
 
             try {
-                const response = await fetch(this.action, { method: 'POST', body: formData, headers: { 'Accept': 'application/json' } });
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    body: formData, 
+                    headers: { 'Accept': 'application/json' } 
+                });
+                
                 if (response.ok) {
-                    // [핵심] 성공 시 브라우저에 데이터 저장 (연락처를 키값으로 사용)
+                    // 데이터 저장 (전화번호를 고유 키로)
                     localStorage.setItem('aloha_res_' + bookingData.phone, JSON.stringify(bookingData));
-                    
-                    alert("알로하! 예약 신청이 완료되었습니다.\n이제 'CHECK' 메뉴에서 조회가 가능합니다.");
+                    alert("알로하! 예약 신청이 성공적으로 발송되었습니다.\n담당자가 확인 후 답변 드리겠습니다.");
                     resForm.reset();
+                } else {
+                    alert("전송에 실패했습니다. Formspree 설정을 확인해주세요.");
                 }
-            } catch (err) { alert("오류가 발생했습니다."); }
-            btn.innerText = "예약 신청 완료";
+            } catch (err) {
+                alert("네트워크 오류가 발생했습니다.");
+            } finally {
+                btn.innerText = "예약 신청 완료";
+            }
         });
 
-        // 3. 예약 조회 함수
+        // [기능 4] 예약 조회
         function lookupReservation() {
             const name = document.getElementById('check_name').value;
             const phone = document.getElementById('check_phone').value;
             const resultArea = document.getElementById('resultArea');
-
-            // 저장된 데이터 불러오기
             const savedData = localStorage.getItem('aloha_res_' + phone);
 
             if (savedData) {
                 const data = JSON.parse(savedData);
                 if (data.name === name) {
-                    // 데이터 일치 시 결과 표시
                     document.getElementById('res_product').innerText = "📦 상품: " + data.product;
                     document.getElementById('res_date').innerText = "📅 일정: " + data.dates;
                     resultArea.style.display = "block";
-                } else {
-                    alert("정보가 일치하지 않습니다.");
-                    resultArea.style.display = "none";
-                }
-            } else {
-                alert("예약 내역을 찾을 수 없습니다.");
-                resultArea.style.display = "none";
-            }
+                } else { alert("정보가 일치하지 않습니다."); }
+            } else { alert("예약 내역을 찾을 수 없습니다."); }
         }
 
-        // 4. 마우스 & 메뉴 & 스크롤 (기존 로직)
+        // [기능 5] 마우스/메뉴/스크롤
         const isTouch = window.matchMedia("(pointer: coarse)").matches;
         if (!isTouch) {
             window.addEventListener('mousemove', (e) => {
@@ -221,8 +237,8 @@
                 outline.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 250, fill: "forwards" });
             });
         }
-        function toggleMenu() { overlay.classList.toggle('open'); }
-        function goToSection(idx) { document.querySelectorAll('section')[idx].scrollIntoView({ behavior: 'smooth' }); overlay.classList.remove('open'); }
+        function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('open'); }
+        function goToSection(idx) { document.querySelectorAll('section')[idx].scrollIntoView({ behavior: 'smooth' }); document.getElementById('menuOverlay').classList.remove('open'); }
         container.addEventListener('scroll', () => {
             let current = 0;
             document.querySelectorAll('section').forEach((sec, i) => { if (container.scrollTop >= sec.offsetTop - 50) current = i; });
