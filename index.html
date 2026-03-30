@@ -8,13 +8,13 @@
         /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* [마우스 포인터 해결] 모바일/태블릿(터치 기기)에서는 커스텀 커서 아예 제거 */
+        /* [마우스 포인터] 모바일/태블릿에서는 아예 소멸 */
         @media (pointer: coarse) {
-            .cursor-dot, .cursor-outline { display: none !important; visibility: hidden !important; opacity: 0 !important; }
+            .cursor-dot, .cursor-outline { display: none !important; visibility: hidden !important; }
             * { cursor: auto !important; }
         }
 
-        /* PC에서만 커스텀 커서 사용 및 시스템 커서 숨김 */
+        /* PC에서만 커스텀 커서 사용 */
         @media (pointer: fine) {
             * { cursor: none !important; }
             .cursor-dot, .cursor-outline { display: block; }
@@ -225,31 +225,30 @@
         const today = new Date().toISOString().split('T')[0];
         startDate.min = today;
 
-        // [마우스 커서] 터치 기기가 아닌 경우에만 이벤트 등록
+        // 마우스 커서 (터치 기기가 아닌 경우에만)
         const isTouch = window.matchMedia("(pointer: coarse)").matches;
         if (!isTouch) {
             window.addEventListener('mousemove', (e) => {
                 dot.style.left = e.clientX + 'px';
                 dot.style.top = e.clientY + 'px';
-                outline.animate({
-                    left: e.clientX + 'px',
-                    top: e.clientY + 'px'
-                }, { duration: 250, fill: "forwards" });
+                outline.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 250, fill: "forwards" });
             });
         }
 
-        // [달력 로직] 강제 포커스 이동 제거 (아이패드 버그 방지)
+        // [날짜 로직] 아이패드 대응 핵심 수정
         startDate.addEventListener('change', () => {
             const val = startDate.value;
             if (val) {
-                // 종료일 최소값을 시작일로 설정
+                // 종료일의 최소 날짜를 시작일로 설정
                 endDate.min = val;
-                // 사용자가 시작일보다 빠른 종료일을 이미 골라뒀다면 초기화
-                if (endDate.value && endDate.value < val) {
-                    endDate.value = "";
+                
+                // [핵심] 종료일의 '값' 자체를 시작일로 미리 넣어둡니다.
+                // 이렇게 하면 종료일 달력을 눌렀을 때 자동으로 시작일 월/일에서 시작합니다.
+                if (!endDate.value || endDate.value < val) {
+                    endDate.value = val;
                 }
-                // [수정] 모바일/태블릿에서는 자동으로 포커스를 옮기지 않습니다.
-                // 대신 사용자가 직접 종료일 칸을 눌렀을 때 시작일 이후부터 정상 표기됩니다.
+                
+                // [주의] 아이패드에서 오늘날짜 튕김 방지를 위해 자동 포커스는 PC에서만 실행
                 if (!isTouch) {
                     endDate.focus();
                     if ('showPicker' in HTMLInputElement.prototype) endDate.showPicker();
@@ -257,7 +256,7 @@
             }
         });
 
-        // [예약 신청] 완료 창 알림
+        // 예약 완료 팝업
         resForm.addEventListener('submit', (e) => {
             e.preventDefault();
             alert("알로하! 예약 신청이 완료되었습니다.\n담당자가 빠른 시일 내에 연락드리겠습니다.");
