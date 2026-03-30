@@ -8,143 +8,72 @@
         /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* [마우스 포인터] 모바일/태블릿에서는 아예 소멸 */
+        /* [마우스 포인터] 모바일/태블릿 차단 */
         @media (pointer: coarse) {
             .cursor-dot, .cursor-outline { display: none !important; visibility: hidden !important; }
             * { cursor: auto !important; }
         }
-
-        /* PC에서만 커스텀 커서 사용 */
+        /* PC 전용 커서 */
         @media (pointer: fine) {
             * { cursor: none !important; }
             .cursor-dot, .cursor-outline { display: block; }
         }
 
-        html, body { 
-            height: 100%; 
-            overflow: hidden; 
-            font-family: 'Pretendard', sans-serif; 
-            background-color: #000; 
-        }
+        html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; }
 
-        /* 2. 커스텀 커서 (PC용) */
-        .cursor-dot {
-            width: 8px; height: 8px; background: #00d2ff; border-radius: 50%;
-            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 10000;
-            transform: translate(-50%, -50%);
-        }
-        .cursor-outline {
-            width: 30px; height: 30px; border: 2px solid rgba(0, 210, 255, 0.5); border-radius: 50%;
-            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
-            transform: translate(-50%, -50%);
-        }
+        /* 2. 커서 (PC용) */
+        .cursor-dot { width: 8px; height: 8px; background: #00d2ff; border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); }
+        .cursor-outline { width: 30px; height: 30px; border: 2px solid rgba(0, 210, 255, 0.5); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); }
         .cursor-outline.hover { width: 60px; height: 60px; background: rgba(0, 210, 255, 0.1); border-color: #00d2ff; }
 
-        /* 3. 풀페이지 컨테이너 (dvh 적용) */
-        .container {
-            height: 100dvh; 
-            overflow-y: scroll; 
-            scroll-snap-type: y mandatory; 
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
-        section {
-            height: 100dvh; 
-            width: 100%; 
-            scroll-snap-align: start;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center;
-            position: relative; 
-            background-size: cover; 
-            background-position: center;
-            color: white; 
-            text-align: center; 
-            padding: 0 10%;
-        }
+        /* 3. 레이아웃 (dvh 적용) */
+        .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; color: white; text-align: center; padding: 0 10%; }
 
-        /* 배경 이미지 */
         #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80'); }
         #tours { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1542259005453-d93f3b203d98?auto=format&fit=crop&w=1600&q=80'); }
         #booking { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1600&q=80'); }
         #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?auto=format&fit=crop&w=1600&q=80'); }
 
-        /* 4. UI 요소 (인디케이터) */
-        .indicator {
-            position: fixed; left: 20px; top: 50%; transform: translateY(-50%);
-            z-index: 1000; display: flex; flex-direction: column; gap: 15px;
-        }
+        /* 4. UI 요소 */
+        .indicator { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
         .dot { width: 12px; height: 12px; border: 1px solid #fff; transition: 0.3s; background: rgba(255,255,255,0.2); }
         .dot.active { background: #00d2ff; border-color: #00d2ff; transform: scale(1.3); }
 
-        /* 5. 메뉴 */
-        .menu-toggle {
-            position: fixed; top: 20px; right: 20px; z-index: 1001;
-            width: 50px; height: 50px; background: #00d2ff; color: white;
-            border: none; font-size: 30px; border-radius: 5px;
-        }
-        .menu-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92); z-index: 1000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden; transition: 0.4s ease;
-        }
+        .menu-toggle { position: fixed; top: 20px; right: 20px; z-index: 1001; width: 50px; height: 50px; background: #00d2ff; color: white; border: none; font-size: 30px; border-radius: 5px; }
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.4s ease; }
         .menu-overlay.open { opacity: 1; visibility: visible; }
-        .menu-link {
-            font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none;
-            letter-spacing: 5px; transition: 0.3s; margin: 15px 0;
-        }
+        .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; transition: 0.3s; margin: 15px 0; }
 
-        /* 6. 여행 상품 카드 */
-        .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; }
-        .tour-card { 
-            background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); 
-            padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); 
-        }
-        .tour-card h3 { color: #00d2ff; font-size: 1.1rem; }
-        .tour-card .price { font-size: 1.2rem; font-weight: bold; color: #ffd700; margin: 5px 0; }
-        .book-btn { background: #00d2ff; border: none; padding: 8px 15px; color: white; border-radius: 5px; font-weight: bold; }
-
-        /* 7. 예약 양식 */
-        .booking-form { 
-            background: white; color: #333; padding: 25px; border-radius: 20px; 
-            width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; 
-        }
-        .booking-form input, .booking-form select { 
-            padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; 
-            font-family: inherit;
-        }
+        /* 5. 예약 폼 및 에러 메시지 */
+        .booking-form { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+        .booking-form input, .booking-form select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; font-family: inherit; }
         .date-group { display: flex; gap: 10px; }
+        
+        /* 과거 날짜 선택 시 경고 멘트 */
+        #date-error { color: #ff3b30; font-size: 11px; font-weight: bold; text-align: left; margin-top: -5px; display: none; }
 
-        /* 8. 지도 및 연락처 (가려짐 방지) */
+        .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 850px; }
+        .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); }
+        .book-btn { background: #00d2ff; border: none; padding: 10px 15px; color: white; border-radius: 5px; font-weight: bold; margin-top: 5px; }
+
         .contact-info { width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 15px; }
         .map-box { width: 100%; height: 250px; border-radius: 15px; overflow: hidden; border: 2px solid #00d2ff; }
-        .info-box { background: rgba(0,0,0,0.75); padding: 20px; border-radius: 15px; text-align: left; font-size: 14px; }
 
-        @media (max-width: 768px) {
-            .tour-container { grid-template-columns: 1fr; }
-            .menu-link { font-size: 1.8rem; }
-            section { padding: 0 40px; }
-            h1 { font-size: 2.5rem !important; }
-        }
+        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } }
     </style>
 </head>
 <body>
 
-    <!-- 마우스 커서 -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
     <button class="menu-toggle" onclick="toggleMenu()">≡</button>
-    
     <div class="menu-overlay" id="menuOverlay">
-        <nav class="menu-list">
-            <div style="margin: 20px 0;"><a href="javascript:void(0)" class="menu-link" onclick="goToSection(0)">HOME</a></div>
-            <div style="margin: 20px 0;"><a href="javascript:void(0)" class="menu-link" onclick="goToSection(1)">TOURS</a></div>
-            <div style="margin: 20px 0;"><a href="javascript:void(0)" class="menu-link" onclick="goToSection(2)">BOOKING</a></div>
-            <div style="margin: 20px 0;"><a href="javascript:void(0)" class="menu-link" onclick="goToSection(3)">LOCATION</a></div>
-        </nav>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(0)">HOME</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(1)">TOURS</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(2)">BOOKING</a>
+        <a href="javascript:void(0)" class="menu-link" onclick="goToSection(3)">LOCATION</a>
     </div>
 
     <div class="indicator">
@@ -156,26 +85,27 @@
 
     <div class="container" id="mainContainer">
         <section id="home">
-            <h1 style="font-size: 4rem; letter-spacing: 12px; margin-bottom: 15px;">ALOHA VIBES</h1>
+            <h1 style="font-size: 4rem; letter-spacing: 12px;">ALOHA VIBES</h1>
             <p style="font-size: 1.3rem; color: #00d2ff;">완벽한 하와이 어드벤처의 시작</p>
         </section>
 
         <section id="tours">
             <h2 style="margin-bottom: 25px; font-size: 2rem;">Premium Tours</h2>
             <div class="tour-container">
-                <div class="tour-card"><h3>오아후 섬 일주</h3><p class="price">$149</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
-                <div class="tour-card"><h3>섬 전체 헬기 투어</h3><p class="price">$320</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
-                <div class="tour-card"><h3>스노클링</h3><p class="price">$85</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
-                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p class="price">$250</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
+                <div class="tour-card"><h3>오아후 섬 투어</h3><p>$149</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
+                <div class="tour-card"><h3>헬기 투어</h3><p>$320</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
+                <div class="tour-card"><h3>스노클링</h3><p>$85</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
+                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p>$250</p><button class="book-btn" onclick="goToSection(2)">예약</button></div>
             </div>
         </section>
 
         <section id="booking">
-            <h2 style="margin-bottom: 20px; font-size: 1.8rem;">Booking</h2>
+            <h2 style="margin-bottom: 20px;">Booking</h2>
             <form class="booking-form" id="resForm">
                 <input type="text" placeholder="성함" required>
                 <input type="tel" placeholder="연락처" required>
                 <input type="email" placeholder="이메일" required>
+                
                 <div class="date-group">
                     <div style="flex:1">
                         <label style="font-size:10px; display:block; text-align:left; color:#666;">출발일</label>
@@ -186,26 +116,22 @@
                         <input type="date" id="endDate" required>
                     </div>
                 </div>
+                <!-- 에러 메시지 출력 공간 -->
+                <p id="date-error">오늘 이후 날짜를 선택하세요.</p>
+
                 <select required>
                     <option value="">상품 선택</option>
-                    <option>오아후 섬 일주</option>
-                    <option>섬 전체 헬기 투어</option>
-                    <option>하나우마베이 스노클링</option>
-                    <option>하와이 스카이다이빙</option>
+                    <option>오아후 섬 일주</option><option>섬 전체 헬기 투어</option>
+                    <option>하나우마베이 스노클링</option><option>하와이 스카이다이빙</option>
                 </select>
-                <button type="submit" class="book-btn" style="height: 45px; margin-top: 5px;">예약 신청</button>
+                <button type="submit" class="book-btn" style="height: 45px;">예약 신청</button>
             </form>
         </section>
 
         <section id="contact">
             <div class="contact-info">
-                <div class="map-box">
-                    <iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-                </div>
-                <div class="info-box">
-                    <p>📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
-                    <p>📞 +1 808-123-4567 | 📧 help@alohavibes.com</p>
-                </div>
+                <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;" loading="lazy"></iframe></div>
+                <div style="background:rgba(0,0,0,0.75); padding:20px; border-radius:15px; text-align:left;"><p>📍 2335 Kalākaua Ave, Honolulu, HI 96815</p></div>
             </div>
         </section>
     </div>
@@ -217,69 +143,73 @@
         const container = document.getElementById('mainContainer');
         const startDate = document.getElementById('startDate');
         const endDate = document.getElementById('endDate');
-        const sections = document.querySelectorAll('section');
-        const dots = document.querySelectorAll('.dot');
+        const dateError = document.getElementById('date-error');
         const resForm = document.getElementById('resForm');
 
-        // 과거 날짜 방지
+        // [날짜 설정] 오늘 날짜 구하기
         const today = new Date().toISOString().split('T')[0];
-        startDate.min = today;
+        startDate.min = today; // 브라우저 레벨에서 과거 날짜 비활성화
 
-        // 마우스 커서 (터치 기기가 아닌 경우에만)
+        // 1. 마우스 커서 제어
         const isTouch = window.matchMedia("(pointer: coarse)").matches;
         if (!isTouch) {
             window.addEventListener('mousemove', (e) => {
-                dot.style.left = e.clientX + 'px';
-                dot.style.top = e.clientY + 'px';
+                dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px';
                 outline.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 250, fill: "forwards" });
             });
         }
 
-        // [날짜 로직] 아이패드 대응 핵심 수정
+        // 2. 출발일 날짜 선택 로직
         startDate.addEventListener('change', () => {
-            const val = startDate.value;
-            if (val) {
-                // 종료일의 최소 날짜를 시작일로 설정
-                endDate.min = val;
-                
-                // [핵심] 종료일의 '값' 자체를 시작일로 미리 넣어둡니다.
-                // 이렇게 하면 종료일 달력을 눌렀을 때 자동으로 시작일 월/일에서 시작합니다.
-                if (!endDate.value || endDate.value < val) {
-                    endDate.value = val;
+            const selectedDate = startDate.value;
+
+            // 과거 날짜 검증 (키보드로 직접 입력 시 대응)
+            if (selectedDate < today) {
+                dateError.style.display = "block"; // 빨간 글씨 보이기
+                startDate.value = ""; // 입력값 초기화
+                return;
+            } else {
+                dateError.style.display = "none"; // 경고 숨기기
+            }
+
+            // 종료일 연동
+            if (selectedDate) {
+                endDate.min = selectedDate;
+                if (!endDate.value || endDate.value < selectedDate) {
+                    endDate.value = selectedDate;
                 }
                 
-                // [주의] 아이패드에서 오늘날짜 튕김 방지를 위해 자동 포커스는 PC에서만 실행
-                if (!isTouch) {
+                // [핵심] 선택 후 자동으로 종료일 달력 띄우기
+                // 아이패드에서 "오늘"로 튕기는 버그 방지를 위해 지연 시간 후 팝업
+                setTimeout(() => {
                     endDate.focus();
-                    if ('showPicker' in HTMLInputElement.prototype) endDate.showPicker();
-                }
+                    if ('showPicker' in HTMLInputElement.prototype) {
+                        try { endDate.showPicker(); } catch (e) {}
+                    }
+                }, 600); 
             }
         });
 
-        // 예약 완료 팝업
+        // 3. 예약 완료 알림
         resForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            alert("알로하! 예약 신청이 완료되었습니다.\n담당자가 빠른 시일 내에 연락드리겠습니다.");
+            alert("알로하! 예약 신청이 완료되었습니다.\n현지 담당자가 확인 후 연락드리겠습니다.");
             resForm.reset();
         });
 
-        // 메뉴/스크롤 기능
+        // 메뉴/스크롤
         function toggleMenu() { overlay.classList.toggle('open'); }
         function goToSection(idx) {
-            sections[idx].scrollIntoView({ behavior: 'smooth' });
+            document.querySelectorAll('section')[idx].scrollIntoView({ behavior: 'smooth' });
             overlay.classList.remove('open');
         }
-
         container.addEventListener('scroll', () => {
             let current = 0;
-            sections.forEach((section, index) => {
-                if (container.scrollTop >= section.offsetTop - 50) current = index;
-            });
-            dots.forEach((dot, index) => dot.classList.toggle('active', index === current));
+            document.querySelectorAll('section').forEach((sec, i) => { if (container.scrollTop >= sec.offsetTop - 50) current = i; });
+            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
         });
 
-        const hoverTargets = document.querySelectorAll('button, a, input, select, .dot');
-        hoverTargets.forEach(el => {
+        document.querySelectorAll('button, a, input, select, .dot').forEach(el => {
             el.addEventListener('mouseenter', () => { if(!isTouch) outline.classList.add('hover'); });
             el.addEventListener('mouseleave', () => { if(!isTouch) outline.classList.remove('hover'); });
         });
