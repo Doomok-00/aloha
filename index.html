@@ -46,8 +46,8 @@
                         flatList.push({ ...allData[phoneKey][resKey], resKey, phoneKey });
                     });
                 });
-                // 타임스탬프 기준 오름차순 정렬 (먼저 예약한 사람이 0번 인덱스)
-                return flatList.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                // 최신순 정렬 (최신 예약이 배열 앞쪽)
+                return flatList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             }
             return [];
         };
@@ -62,15 +62,10 @@
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        /* PC 커서 */
         * { cursor: none !important; }
         .cursor-dot { width: 10px; height: 10px; background: #000; border: 2px solid #fff; border-radius: 50%; position: fixed; z-index: 1000000; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         .cursor-trail { position: fixed; z-index: 999999; pointer-events: none; font-size: 28px; filter: drop-shadow(0 0 8px rgba(0,210,255,0.9)); will-change: transform; }
-
         @media (pointer: coarse) { .cursor-dot, .cursor-trail { display: none !important; } * { cursor: auto !important; } }
-
-        /* 터치 리플: 투명 파동 */
         .touch-ripple { position: fixed; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: transparent; transform: scale(0); animation: ripple-out 0.5s ease-out; pointer-events: none; z-index: 9999999; }
         @keyframes ripple-out { from { transform: scale(0); opacity: 1; } to { transform: scale(2.5); opacity: 0; } }
 
@@ -231,7 +226,6 @@
     </div>
 
     <script>
-        // 터치 효과
         function createRipple(x, y) {
             const ripple = document.createElement('div');
             ripple.className = 'touch-ripple'; document.body.appendChild(ripple);
@@ -241,7 +235,6 @@
         }
         window.addEventListener('touchstart', (e) => createRipple(e.touches[0].clientX, e.touches[0].clientY));
 
-        // PC 커서
         const dot = document.querySelector('.cursor-dot');
         const trail = document.querySelector('.cursor-trail');
         let mx = 0, my = 0, tx = 0, ty = 0;
@@ -249,7 +242,6 @@
         function animate() { tx += (mx - tx) * 0.1; ty += (my - ty) * 0.1; trail.style.transform = `translate3d(${tx + 15}px, ${ty + 15}px, 0)`; requestAnimationFrame(animate); }
         animate();
 
-        // 입력 제어
         const autoHyphen = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v; else if (v.length < 8) r = v.substr(0, 3) + "-" + v.substr(3); else r = v.substr(0, 3) + "-" + v.substr(3, 4) + "-" + v.substr(7);
@@ -259,7 +251,7 @@
         document.getElementById('check_phone').addEventListener('input', autoHyphen);
         flatpickr("#rangeDate", { mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today" });
 
-        // 예약 및 조회
+        // [복구] 예약 신청 시 메일 전송
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -273,7 +265,8 @@
             try {
                 const res = await fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'Accept': 'application/json' } });
                 if (res.ok) { await window.saveToFirebase(data); alert("예약 신청이 완료되었습니다."); this.reset(); }
-            } catch (err) { alert("오류 발생"); }
+                else { alert("메일 전송 실패. 고객센터로 문의 바랍니다."); }
+            } catch (err) { alert("연결 오류 발생"); }
             btn.innerText = "예약 신청 완료";
         });
 
@@ -292,17 +285,31 @@
                         const item = document.createElement('div');
                         item.className = 'res-item';
                         const resKey = Object.keys(data).find(k => data[k] === r);
-                        item.innerHTML = `<div style="flex:1;"><b>📦 ${r.product}</b><p style="color:#555; font-size:13px;">📅 ${r.dates}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${resKey}')">취소</button>`;
+                        item.innerHTML = `<div style="flex:1;"><b>📦 ${r.product}</b><p style="color:#555; font-size:13px;">📅 ${r.dates}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${resKey}', '${r.name}', '${r.product}')">취소</button>`;
                         area.appendChild(item);
                     });
                 } else { alert("이름이 일치하지 않습니다."); area.style.display="none"; }
             } else { alert("내역을 찾을 수 없습니다."); area.style.display="none"; }
         }
-        async function handleCancel(phone, resKey) { if (confirm("예약을 취소하시겠습니까?")) { await window.deleteFromFirebase(phone, resKey); alert("정상적으로 취소되었습니다."); handleLookup(); } }
 
-        // 어드민 전용 기능
+        // [복구] 예약 취소 시 메일 알림
+        async function handleCancel(phone, resKey, name, product) {
+            if (!confirm("예약을 취소하시겠습니까?")) return;
+            const cancelData = new FormData();
+            cancelData.append("알림", "⚠️ 예약 취소 발생");
+            cancelData.append("고객명", name);
+            cancelData.append("연락처", phone);
+            cancelData.append("취소상품", product);
+
+            try {
+                await fetch("https://formspree.io/f/xojpdaqq", { method: 'POST', body: cancelData, headers: { 'Accept': 'application/json' } });
+                await window.deleteFromFirebase(phone, resKey);
+                alert("정상적으로 취소되었습니다.");
+                handleLookup();
+            } catch (err) { alert("취소 처리 중 오류 발생"); }
+        }
+
         let adminData = []; let filteredData = []; let curPage = 1; let rowsPerPage = 10; let editResKey = null;
-
         function loginAdmin() {
             if (document.getElementById('adminPassword').value === "aloha1234") {
                 document.getElementById('adminAuth').style.display = "none";
@@ -310,72 +317,31 @@
                 loadAdminData();
             } else { alert("비밀번호 오류"); }
         }
-
-        async function loadAdminData() { 
-            adminData = await window.getAllFromFirebase(); 
-            filteredData = [...adminData]; 
-            renderAdminTable(); 
-        }
-
+        async function loadAdminData() { adminData = await window.getAllFromFirebase(); filteredData = [...adminData]; renderAdminTable(); }
         function handleAdminSearch() {
             const q = document.getElementById('adminSearch').value.toLowerCase();
             filteredData = adminData.filter(r => (r.name && r.name.toLowerCase().includes(q)) || (r.phone && r.phone.includes(q)));
             curPage = 1; renderAdminTable();
         }
-
         function changePageSize() { rowsPerPage = parseInt(document.getElementById('rowsPerPage').value); curPage = 1; renderAdminTable(); }
-
+        
         function renderAdminTable() {
-            const tbody = document.getElementById('adminTbody'); 
-            tbody.innerHTML = "";
-            
-            if(filteredData.length === 0) { 
-                tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:30px;'>데이터가 없습니다.</td></tr>"; 
-                return; 
-            }
-
-            const start = (curPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            
-            // 현재 페이지 데이터 추출 및 실제 데이터 기반 1번부터 번호 부여
-            let pageData = filteredData.slice(start, end).map((item, idx) => ({
-                ...item,
-                displayNo: start + idx + 1
-            }));
-
-            // 최신 예약이 위로 오도록 배열 뒤집기
+            const tbody = document.getElementById('adminTbody'); tbody.innerHTML = "";
+            if(filteredData.length === 0) { tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:30px;'>데이터가 없습니다.</td></tr>"; return; }
+            const start = (curPage - 1) * rowsPerPage; const end = start + rowsPerPage;
+            let pageData = filteredData.slice(start, end).map((item, idx) => ({ ...item, displayNo: start + idx + 1 }));
             pageData.reverse().forEach((r) => {
                 const tr = document.createElement('tr');
                 const no = r.displayNo;
-
                 if (editResKey === r.resKey) {
-                    tr.innerHTML = `
-                        <td>${no}</td><td>${r.time || ''}</td>
-                        <td><input type="text" id="edit_name" value="${r.name || ''}"></td>
-                        <td><input type="text" id="edit_phone" value="${r.phone || ''}"></td>
-                        <td><input type="text" id="edit_email" value="${r.email || ''}"></td>
-                        <td><input type="text" id="edit_product" value="${r.product || ''}"></td>
-                        <td><input type="text" id="edit_dates" value="${r.dates || ''}"></td>
-                        <td><input type="text" id="edit_adults" value="${r.adults || ''}"></td>
-                        <td><input type="text" id="edit_children" value="${r.children || ''}"></td>
-                        <td>
-                            <button class="admin-btn btn-save" onclick="saveEdit('${r.phoneKey}', '${r.resKey}')">저장</button>
-                            <button class="admin-btn" onclick="cancelEdit()">취소</button>
-                        </td>`;
+                    tr.innerHTML = `<td>${no}</td><td>${r.time || ''}</td><td><input type="text" id="edit_name" value="${r.name || ''}"></td><td><input type="text" id="edit_phone" value="${r.phone || ''}"></td><td><input type="text" id="edit_email" value="${r.email || ''}"></td><td><input type="text" id="edit_product" value="${r.product || ''}"></td><td><input type="text" id="edit_dates" value="${r.dates || ''}"></td><td><input type="text" id="edit_adults" value="${r.adults || ''}"></td><td><input type="text" id="edit_children" value="${r.children || ''}"></td><td><button class="admin-btn btn-save" onclick="saveEdit('${r.phoneKey}', '${r.resKey}')">저장</button><button class="admin-btn" onclick="cancelEdit()">취소</button></td>`;
                 } else {
-                    tr.innerHTML = `
-                        <td>${no}</td><td>${r.time || ''}</td><td>${r.name || ''}</td><td>${r.phone || ''}</td><td>${r.email || ''}</td>
-                        <td>${r.product || ''}</td><td>${r.dates || ''}</td><td>${r.adults || 0}</td><td>${r.children || 0}</td>
-                        <td>
-                            <button class="admin-btn btn-edit" onclick="startEdit('${r.resKey}')">수정</button>
-                            <button class="admin-btn btn-del" onclick="deleteItem('${r.phoneKey}', '${r.resKey}')">삭제</button>
-                        </td>`;
+                    tr.innerHTML = `<td>${no}</td><td>${r.time || ''}</td><td>${r.name || ''}</td><td>${r.phone || ''}</td><td>${r.email || ''}</td><td>${r.product || ''}</td><td>${r.dates || ''}</td><td>${r.adults || 0}</td><td>${r.children || 0}</td><td><button class="admin-btn btn-edit" onclick="startEdit('${r.resKey}')">수정</button><button class="admin-btn btn-del" onclick="deleteItem('${r.phoneKey}', '${r.resKey}')">삭제</button></td>`;
                 }
                 tbody.appendChild(tr);
             });
             renderPagination();
         }
-
         function renderPagination() {
             const pBox = document.getElementById('adminPagination'); pBox.innerHTML = "";
             const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -384,7 +350,6 @@
                 b.innerText = i; b.onclick = () => { curPage = i; renderAdminTable(); }; pBox.appendChild(b);
             }
         }
-
         function startEdit(rKey) { editResKey = rKey; renderAdminTable(); }
         function cancelEdit() { editResKey = null; renderAdminTable(); }
         async function saveEdit(pKey, rKey) {
