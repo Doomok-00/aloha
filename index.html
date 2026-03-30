@@ -28,23 +28,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 데이터 저장
         window.saveToFirebase = async (data) => {
             const key = data.phone.replace(/-/g, "");
-            const reservationListRef = ref(db, 'reservations/' + key);
-            const newResRef = push(reservationListRef);
-            await set(newResRef, data);
+            await set(push(ref(db, 'reservations/' + key)), data);
         };
-
-        // 데이터 조회 (키 값 포함하여 가져오기)
         window.getFromFirebase = async (phone) => {
             const key = phone.replace(/-/g, "");
-            const dbRef = ref(db);
-            const snapshot = await get(child(dbRef, `reservations/${key}`));
+            const snapshot = await get(child(ref(getDatabase()), `reservations/${key}`));
             return snapshot.exists() ? snapshot.val() : null;
         };
-
-        // [신규] 데이터 삭제 함수
         window.deleteFromFirebase = async (phone, resKey) => {
             const phoneKey = phone.replace(/-/g, "");
             await remove(ref(db, `reservations/${phoneKey}/${resKey}`));
@@ -52,7 +44,7 @@
     </script>
 
     <style>
-        /* 기본 스타일 및 마우스 (기존 유지) */
+        /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
         @media (pointer: fine) {
@@ -81,26 +73,26 @@
         .menu-overlay.open { opacity: 1; visibility: visible; }
         .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; margin: 15px 0; }
 
-        .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; margin-bottom: 25px; }
-        .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); }
-        .action-btn { background: #00d2ff; border: none; padding: 15px 30px; color: white; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        /* 폼 스타일 */
+        .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; }
+        .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; font-family: inherit; }
+        .action-btn { background: #00d2ff; border: none; padding: 15px 30px; color: white; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 5px; }
 
-        .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; }
-        .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; }
-        
-        /* 조회 결과 리스트 디자인 */
-        #resultArea { margin-top: 15px; width: 100%; max-height: 280px; overflow-y: auto; text-align: left; display: none; }
-        .res-item { background: #f0faff; padding: 15px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 10px; position: relative; display: flex; justify-content: space-between; align-items: center; }
-        .res-info { flex: 1; }
+        /* 인원 선택 레이아웃 */
+        .person-count { display: flex; gap: 10px; text-align: left; }
+        .person-count div { flex: 1; }
+        .person-count label { font-size: 11px; color: #666; font-weight: bold; margin-left: 2px; }
+
+        #resultArea { margin-top: 15px; width: 100%; max-height: 300px; overflow-y: auto; text-align: left; display: none; }
+        .res-item { background: #f0faff; padding: 15px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .res-info b { color: #007fa3; display: block; margin-bottom: 3px; }
         .res-info p { color: #555; font-size: 13px; margin: 2px 0; }
-        
-        /* [신규] 취소 버튼 스타일 */
-        .cancel-btn { background: #ff3b30; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .cancel-btn:hover { background: #d32f2f; }
+        .cancel-btn { background: #ff3b30; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
+        .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; margin-bottom: 25px; }
+        .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); }
         .map-box { width: 100%; height: 420px; border-radius: 20px; overflow: hidden; border: 2px solid #00d2ff; }
-        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } }
+        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } .menu-link { font-size: 1.8rem; } .person-count { flex-direction: row; } }
     </style>
 </head>
 <body>
@@ -139,11 +131,12 @@
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
+        <!-- 3. BOOKING (인원 선택 추가됨) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
                 <input type="text" name="name" id="book_name" placeholder="성함" required>
-                <input type="tel" name="phone" id="book_phone" placeholder="연락처 (010-0000-0000)" maxlength="13" required>
+                <input type="tel" name="phone" id="book_phone" placeholder="연락처" maxlength="13" required>
                 <input type="email" name="email" id="book_email" placeholder="이메일" required>
                 <input type="text" id="rangeDate" name="dates" placeholder="일정 선택" readonly required>
                 <select name="product" id="book_product" required>
@@ -151,10 +144,28 @@
                     <option>오아후 섬 일주</option><option>섬 전체 헬기 투어</option>
                     <option>하나우마베이 스노클링</option><option>하와이 스카이다이빙</option>
                 </select>
+                <!-- 인원 선택 칸 추가 -->
+                <div class="person-count">
+                    <div>
+                        <label>성인</label>
+                        <select name="adults" id="book_adults" required>
+                            <option value="1">성인 1명</option><option value="2">성인 2명</option><option value="3">성인 3명</option>
+                            <option value="4">성인 4명</option><option value="5">성인 5명 이상</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>어린이</label>
+                        <select name="children" id="book_children" required>
+                            <option value="0">어린이 0명</option><option value="1">어린이 1명</option><option value="2">어린이 2명</option>
+                            <option value="3">어린이 3명 이상</option>
+                        </select>
+                    </div>
+                </div>
                 <button type="submit" class="action-btn" id="submitBtn">예약 신청 완료</button>
             </form>
         </section>
 
+        <!-- 4. CHECK -->
         <section id="check">
             <h2 style="margin-bottom: 20px;">Check Reservation</h2>
             <div class="form-card">
@@ -203,7 +214,7 @@
             onClose: function(s) { if(s.length===2) this.input.value = this.formatDate(s[0],"y.m.d")+"~"+this.formatDate(s[1],"y.m.d")+" ("+(Math.ceil(Math.abs(s[1]-s[0])/(86400000))+1)+"일)"; }
         });
 
-        // 4. 예약 신청
+        // 4. 예약 신청 (인원 데이터 추가됨)
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -212,7 +223,9 @@
                 phone: document.getElementById('book_phone').value, 
                 email: document.getElementById('book_email').value,
                 dates: document.getElementById('rangeDate').value, 
-                product: document.getElementById('book_product').value, 
+                product: document.getElementById('book_product').value,
+                adults: document.getElementById('book_adults').value,
+                children: document.getElementById('book_children').value,
                 time: new Date().toLocaleString() 
             };
             btn.innerText = "전송 중...";
@@ -223,21 +236,18 @@
             btn.innerText = "예약 신청 완료";
         });
 
-        // 5. 조회 및 취소 연동
+        // 5. 조회 (인원수 표시됨)
         async function handleLookup() {
             const name = document.getElementById('check_name').value.trim();
             const phone = document.getElementById('check_phone').value;
             const area = document.getElementById('resultArea');
             if (!name || !phone) return;
-
             area.innerHTML = "<p style='color:#333; text-align:center;'>조회 중...</p>";
             area.style.display = "block";
-            
             const data = await window.getFromFirebase(phone);
             if (data) {
                 const keys = Object.keys(data);
                 const myRes = keys.filter(k => data[k].name === name);
-
                 if (myRes.length > 0) {
                     area.innerHTML = `<h4 style='color:#007fa3; margin-bottom:10px;'>총 ${myRes.length}건</h4>`;
                     myRes.reverse().forEach(key => {
@@ -247,10 +257,11 @@
                         item.innerHTML = `
                             <div class="res-info">
                                 <b>📦 ${r.product}</b>
-                                <p>📅 ${r.dates}</p>
-                                <p>🕒 ${r.time}</p>
+                                <p>📅 일정: ${r.dates}</p>
+                                <p>👥 인원: 성인 ${r.adults}명, 어린이 ${r.children}명</p>
+                                <p style="font-size:11px; color:#999;">🕒 ${r.time}</p>
                             </div>
-                            <button class="cancel-btn" onclick="handleCancel('${phone}', '${key}', '${r.name}', '${r.product}', '${r.dates}')">취소</button>
+                            <button class="cancel-btn" onclick="handleCancel('${phone}', '${key}', '${r.name}', '${r.product}', '${r.adults}', '${r.children}')">취소</button>
                         `;
                         area.appendChild(item);
                     });
@@ -258,34 +269,21 @@
             } else { area.innerHTML = "<p style='color:red; text-align:center;'>예약 내역이 없습니다.</p>"; }
         }
 
-        // 6. [핵심] 취소 처리 함수
-        async function handleCancel(phone, key, name, product, dates) {
-            if (!confirm(`[${product}] 예약을 취소하시겠습니까?\n취소 시 관리자에게 이메일 알림이 발송됩니다.`)) return;
-
-            // 관리자에게 취소 메일 발송 (Formspree 활용)
+        // 6. 취소
+        async function handleCancel(phone, key, name, product, adults, children) {
+            if (!confirm(`[${product}] 예약을 취소하시겠습니까?`)) return;
             const cancelData = new FormData();
-            cancelData.append("상태", "⚠️ 예약 취소 요청");
+            cancelData.append("상태", "⚠️ 예약 취소 알림");
             cancelData.append("고객명", name);
             cancelData.append("연락처", phone);
             cancelData.append("취소상품", product);
-            cancelData.append("취소일정", dates);
-
+            cancelData.append("취소인원", `성인 ${adults}, 어린이 ${children}`);
             try {
-                // 이메일 전송
-                await fetch("https://formspree.io/f/xojpdaqq", {
-                    method: 'POST',
-                    body: cancelData,
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                // 파이어베이스 데이터 삭제
+                await fetch("https://formspree.io/f/xojpdaqq", { method: 'POST', body: cancelData, headers: { 'Accept': 'application/json' } });
                 await window.deleteFromFirebase(phone, key);
-                
-                alert("예약이 정상적으로 취소되었습니다.");
-                handleLookup(); // 목록 새로고침
-            } catch (err) {
-                alert("취소 처리 중 오류가 발생했습니다.");
-            }
+                alert("정상적으로 취소되었습니다.");
+                handleLookup();
+            } catch (err) { alert("취소 중 오류 발생"); }
         }
 
         // 메뉴/스크롤
