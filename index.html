@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>ALOHA VIBES - 하와이 전문 여행사</title>
     
-    <!-- 라이브러리 (달력 & 이메일) -->
+    <!-- 라이브러리 (달력 & 아이콘) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -15,11 +15,12 @@
         /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* 마우스 포인터: 모바일/태블릿 차단 */
+        /* 마우스 포인터: 모바일/태블릿(iPad 포함)은 완벽 차단 */
         @media (pointer: coarse) {
-            .cursor-dot, .cursor-outline { display: none !important; }
+            .cursor-dot, .cursor-outline { display: none !important; visibility: hidden !important; }
             * { cursor: auto !important; }
         }
+        /* PC에서만 커스텀 커서 사용 */
         @media (pointer: fine) {
             * { cursor: none !important; }
             .cursor-dot, .cursor-outline { display: block; }
@@ -32,10 +33,9 @@
         .cursor-outline { width: 30px; height: 30px; border: 2px solid rgba(0, 210, 255, 0.5); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; transform: translate(-50%, -50%); }
         .cursor-outline.hover { width: 60px; height: 60px; background: rgba(0, 210, 255, 0.1); border-color: #00d2ff; }
         
-        /* 달력 우선순위 조절 */
         .flatpickr-calendar { z-index: 99999 !important; }
 
-        /* 레이아웃 */
+        /* 레이아웃 (dvh 적용) */
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; text-align: center; padding: 0 10%; }
 
@@ -56,7 +56,7 @@
         .menu-overlay.open { opacity: 1; visibility: visible; }
         .menu-link { font-size: 2.5rem; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: 5px; margin: 15px 0; }
 
-        /* 폼 카드 및 버튼 */
+        /* 폼 스타일 */
         .form-card { background: white; color: #333; padding: 25px; border-radius: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
         .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; font-family: inherit; }
         .action-btn { background: #00d2ff; border: none; padding: 10px 15px; color: white; border-radius: 5px; font-weight: bold; font-size: 16px; margin-top: 5px; }
@@ -65,18 +65,26 @@
         #resultArea { margin-top: 15px; padding: 15px; background: #f0faff; border-radius: 10px; border-left: 5px solid #00d2ff; display: none; text-align: left; }
         #resultArea h4 { color: #007fa3; margin-bottom: 5px; }
 
-        /* 투어 카드 */
+        /* 투어 상품 카드 */
         .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 850px; }
         .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); }
-        .tour-card h3 { color: #00d2ff; margin-bottom: 5px; font-size: 1.2rem; }
-        .tour-card .price { font-size: 1.2rem; font-weight: bold; color: #ffd700; margin-bottom: 10px; }
 
-        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } .menu-link { font-size: 1.8rem; } }
+        /* [핵심 수정] 마지막 페이지 연락처/지도 레이아웃 */
+        .contact-info { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px; }
+        .map-box { width: 100%; height: 420px; border-radius: 20px; overflow: hidden; border: 3px solid #00d2ff; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .contact-details { background: rgba(0,0,0,0.75); padding: 20px; border-radius: 15px; text-align: left; font-size: 16px; border: 1px solid rgba(0,210,255,0.3); }
+
+        @media (max-width: 768px) { 
+            .tour-container { grid-template-columns: 1fr; } 
+            h1 { font-size: 2.5rem !important; } 
+            .menu-link { font-size: 1.8rem; }
+            .map-box { height: 300px; } /* 모바일에서는 세로 길이를 적절히 줄임 */
+            .contact-info { padding: 0 5%; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 마우스 커서 -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -101,34 +109,18 @@
         <!-- 1. HOME -->
         <section id="home"><h1>ALOHA VIBES</h1><p>완벽한 하와이 어드벤처의 시작</p></section>
         
-        <!-- 2. TOURS (버튼 복구 완료) -->
+        <!-- 2. TOURS -->
         <section id="tours">
             <h2 style="margin-bottom: 25px;">Premium Tours</h2>
             <div class="tour-container">
-                <div class="tour-card">
-                    <h3>오아후 섬 투어</h3>
-                    <p class="price">$149</p>
-                    <button class="action-btn" onclick="goToSection(2)">예약하기</button>
-                </div>
-                <div class="tour-card">
-                    <h3>헬기 투어</h3>
-                    <p class="price">$320</p>
-                    <button class="action-btn" onclick="goToSection(2)">예약하기</button>
-                </div>
-                <div class="tour-card">
-                    <h3>스노클링</h3>
-                    <p class="price">$85</p>
-                    <button class="action-btn" onclick="goToSection(2)">예약하기</button>
-                </div>
-                <div class="tour-card">
-                    <h3>스카이다이빙 🪂</h3>
-                    <p class="price">$250</p>
-                    <button class="action-btn" onclick="goToSection(2)">예약하기</button>
-                </div>
+                <div class="tour-card"><h3>오아후 섬 투어</h3><p>$149</p><button class="action-btn" onclick="goToSection(2)">예약하기</button></div>
+                <div class="tour-card"><h3>헬기 투어</h3><p>$320</p><button class="action-btn" onclick="goToSection(2)">예약하기</button></div>
+                <div class="tour-card"><h3>스노클링</h3><p>$85</p><button class="action-btn" onclick="goToSection(2)">예약하기</button></div>
+                <div class="tour-card"><h3>스카이다이빙 🪂</h3><p>$250</p><button class="action-btn" onclick="goToSection(2)">예약하기</button></div>
             </div>
         </section>
 
-        <!-- 3. BOOKING -->
+        <!-- 3. BOOKING (xojpdaqq 연동) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
@@ -150,7 +142,7 @@
             <h2 style="margin-bottom: 20px;">Check Reservation</h2>
             <div class="form-card">
                 <input type="text" id="check_name" placeholder="성함">
-                <input type="tel" id="check_phone" placeholder="연락처 (하이픈 포함)" maxlength="13">
+                <input type="tel" id="check_phone" placeholder="연락처 (010-0000-0000)" maxlength="13">
                 <button type="button" class="action-btn" onclick="lookupReservation()">조회하기</button>
                 <div id="resultArea">
                     <h4 id="res_title">조회 완료</h4>
@@ -160,13 +152,16 @@
             </div>
         </section>
 
-        <!-- 5. LOCATION -->
+        <!-- 5. LOCATION (지도 사이즈 최적화) -->
         <section id="contact">
-            <div class="contact-info" style="width: 100%; max-width: 550px;">
-                <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
-                <div style="background:rgba(0,0,0,0.75); padding:15px; border-radius:15px; text-align:left; font-size:14px;">
-                    <p>📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
-                    <p>📞 +1 808-123-4567 | 📧 jangyh89@gmail.com</p>
+            <div class="contact-info">
+                <h2 style="margin-bottom: 10px; font-size: 2rem;">Location</h2>
+                <div class="map-box">
+                    <iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;" loading="lazy"></iframe>
+                </div>
+                <div class="contact-details">
+                    <p>📍 <b>Address:</b> 2335 Kalākaua Ave, Honolulu, HI 96815</p>
+                    <p>📞 <b>Phone:</b> +1 808-123-4567 | 📧 <b>Email:</b> jangyh89@gmail.com</p>
                 </div>
             </div>
         </section>
@@ -179,10 +174,9 @@
         const container = document.getElementById('mainContainer');
         const resForm = document.getElementById('resForm');
 
-        // 하이픈 자동 생성
+        // [기능 1] 휴대폰 하이픈 자동
         const handlePhone = (e) => {
-            let v = e.target.value.replace(/[^0-9]/g, "");
-            let r = "";
+            let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v;
             else if (v.length < 8) r = v.substr(0, 3) + "-" + v.substr(3);
             else r = v.substr(0, 3) + "-" + v.substr(3, 4) + "-" + v.substr(7);
@@ -191,18 +185,18 @@
         document.getElementById('book_phone').addEventListener('input', handlePhone);
         document.getElementById('check_phone').addEventListener('input', handlePhone);
 
-        // 달력 설정 (기간 선택)
+        // [기능 2] 달력 설정
         flatpickr("#rangeDate", {
             mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today", disableMobile: "true",
             onClose: function(selectedDates, dateStr, instance) {
                 if (selectedDates.length === 2) {
-                    const diff = Math.ceil(Math.abs(selectedDates[1] - selectedDates[0]) / (1000*60*60*24)) + 1;
-                    instance.input.value = `${instance.formatDate(selectedDates[0], "y.m.d")} ~ ${instance.formatDate(selectedDates[1], "y.m.d")} (${diff}일)`;
+                    const diffDays = Math.ceil(Math.abs(selectedDates[1] - selectedDates[0]) / (1000*60*60*24)) + 1;
+                    instance.input.value = `${instance.formatDate(selectedDates[0], "y.m.d")} ~ ${instance.formatDate(selectedDates[1], "y.m.d")} (${diffDays}일)`;
                 }
             }
         });
 
-        // 이메일 비동기 전송
+        // [기능 3] Formspree 비동기 전송
         resForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -217,26 +211,25 @@
                 const response = await fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'Accept': 'application/json' } });
                 if (response.ok) {
                     localStorage.setItem('aloha_res_' + bookingData.phone, JSON.stringify(bookingData));
-                    alert("알로하! 예약 신청이 성공적으로 발송되었습니다.");
+                    alert("알로하! 예약 신청이 발송되었습니다.\n'CHECK' 페이지에서 내역 조회가 가능합니다.");
                     resForm.reset();
                 }
             } catch (err) { alert("오류가 발생했습니다."); }
             btn.innerText = "예약 신청 완료";
         });
 
-        // 예약 조회
+        // [기능 4] 조회 로직
         function lookupReservation() {
-            const name = document.getElementById('check_name').value;
-            const phone = document.getElementById('check_phone').value;
-            const saved = localStorage.getItem('aloha_res_' + phone);
+            const name = document.getElementById('check_name').value, phone = document.getElementById('check_phone').value;
+            const saved = localStorage.getItem('aloha_res_' + phone), resultArea = document.getElementById('resultArea');
             if (saved) {
                 const data = JSON.parse(saved);
                 if (data.name === name) {
                     document.getElementById('res_product').innerText = "📦 상품: " + data.product;
                     document.getElementById('res_date').innerText = "📅 일정: " + data.dates;
-                    document.getElementById('resultArea').style.display = "block";
-                } else { alert("정보가 일치하지 않습니다."); }
-            } else { alert("내역을 찾을 수 없습니다."); }
+                    resultArea.style.display = "block";
+                } else alert("정보가 일치하지 않습니다.");
+            } else alert("내역을 찾을 수 없습니다.");
         }
 
         // 마우스/메뉴/스크롤
