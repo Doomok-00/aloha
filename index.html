@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>ALOHA VIBES - 하와이 전문 여행사</title>
     
-    <!-- 라이브러리 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
-    <!-- 파이어베이스 연결 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, push, set, get, child, remove, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
@@ -48,7 +46,8 @@
                         flatList.push({ ...allData[phoneKey][resKey], resKey, phoneKey });
                     });
                 });
-                return flatList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                // 순서대로 정렬 (오래된 예약이 위로 오게 하여 1, 2, 3... 순번 부여)
+                return flatList.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
             }
             return [];
         };
@@ -64,7 +63,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* PC 커서: 검은 점 + 흰 테두리 */
+        /* PC 커서 */
         * { cursor: none !important; }
         .cursor-dot { width: 10px; height: 10px; background: #000; border: 2px solid #fff; border-radius: 50%; position: fixed; z-index: 1000000; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         .cursor-trail { position: fixed; z-index: 999999; pointer-events: none; font-size: 28px; filter: drop-shadow(0 0 8px rgba(0,210,255,0.9)); will-change: transform; }
@@ -106,15 +105,15 @@
         .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; }
         .action-btn { background: #00d2ff; border: none; padding: 15px 30px; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* 예약 확인 결과 아이템 스타일 (복구) */
         #resultArea { margin-top: 15px; width: 100%; max-height: 250px; overflow-y: auto; text-align: left; display: none; }
         .res-item { background: #f0faff; padding: 15px; border-radius: 12px; border-left: 5px solid #00d2ff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: #333; }
         .cancel-btn { background: #ff3b30; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-        /* 어드민 스타일 */
+        /* 어드민 박스 및 검색바 */
         .admin-box { width: 100%; max-width: 1250px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: left; overflow-x: auto; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
-        .admin-search-bar { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 15px; border-radius: 8px; width: 200px; outline: none; }
+        .admin-search-bar { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 15px; border-radius: 8px; width: 220px; outline: none; }
+        
         .admin-table { width: 100%; border-collapse: collapse; color: #fff; font-size: 12px; min-width: 1100px; }
         .admin-table th { background: #00d2ff; color: #000; padding: 10px; }
         .admin-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -123,6 +122,7 @@
         .btn-edit { background: #ffcc00; color: #000; }
         .btn-save { background: #4cd964; color: #fff; }
         .btn-del { background: #ff3b30; color: #fff; }
+
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
         .page-btn { background: #333; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
         .page-btn.active { background: #00d2ff; color: #000; font-weight: bold; }
@@ -130,7 +130,6 @@
         .tour-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; margin-bottom: 25px; }
         .tour-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); }
         .map-box { width: 100%; height: 420px; border-radius: 20px; overflow: hidden; border: 2px solid #00d2ff; }
-        @media (max-width: 768px) { .tour-container { grid-template-columns: 1fr; } h1 { font-size: 2.5rem !important; } }
     </style>
 </head>
 <body>
@@ -158,10 +157,8 @@
     </div>
 
     <div class="container" id="mainContainer">
-        <!-- 1. HOME -->
         <section id="home"><h1>ALOHA VIBES</h1><p style="color: #00d2ff;">완벽한 하와이 어드벤처</p></section>
         
-        <!-- 2. TOURS -->
         <section id="tours">
             <h2 style="margin-bottom: 30px;">Premium Tours</h2>
             <div class="tour-container">
@@ -173,7 +170,6 @@
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
@@ -198,7 +194,6 @@
             </form>
         </section>
 
-        <!-- 4. CHECK (완전 복구: 성함 필드 추가 및 스타일 복원) -->
         <section id="check">
             <h2 style="margin-bottom: 20px;">Check Reservation</h2>
             <div class="form-card">
@@ -209,7 +204,6 @@
             </div>
         </section>
 
-        <!-- 5. LOCATION -->
         <section id="contact">
             <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
             <p style="margin-top:10px; font-size:14px; color:rgba(255,255,255,0.7);">📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
@@ -226,7 +220,7 @@
             <div id="adminPanel" class="admin-box" style="display:none;">
                 <div class="admin-header">
                     <h2>전체 예약 내역</h2>
-                    <input type="text" id="adminSearch" class="admin-search-bar" placeholder="성함/연락처 검색" oninput="handleAdminSearch()">
+                    <input type="text" id="adminSearch" class="admin-search-bar" placeholder="성함/연락처 검색..." oninput="handleAdminSearch()">
                     <div>
                         <select id="rowsPerPage" onchange="changePageSize()" style="padding:5px; border-radius:4px;">
                             <option value="10">10줄 보기</option><option value="30">30줄 보기</option><option value="50">50줄 보기</option>
@@ -248,19 +242,17 @@
     </div>
 
     <script>
-        // --- 터치 리플 (투명 파동) ---
+        // 터치 리플
         function createRipple(x, y) {
             const ripple = document.createElement('div');
-            ripple.className = 'touch-ripple';
-            document.body.appendChild(ripple);
-            const size = 40;
-            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.className = 'touch-ripple'; document.body.appendChild(ripple);
+            const size = 40; ripple.style.width = ripple.style.height = size + 'px';
             ripple.style.left = (x - size/2) + 'px'; ripple.style.top = (y - size/2) + 'px';
             ripple.addEventListener('animationend', () => ripple.remove());
         }
         window.addEventListener('touchstart', (e) => createRipple(e.touches[0].clientX, e.touches[0].clientY));
 
-        // --- 커서 애니메이션 (PC) ---
+        // 커서
         const dot = document.querySelector('.cursor-dot');
         const trail = document.querySelector('.cursor-trail');
         let mx = 0, my = 0, tx = 0, ty = 0;
@@ -268,7 +260,7 @@
         function animate() { tx += (mx - tx) * 0.1; ty += (my - ty) * 0.1; trail.style.transform = `translate3d(${tx + 15}px, ${ty + 15}px, 0)`; requestAnimationFrame(animate); }
         animate();
 
-        // --- 기본 입력 설정 ---
+        // 입력 제어
         const autoHyphen = (e) => {
             let v = e.target.value.replace(/[^0-9]/g, ""), r = "";
             if (v.length < 4) r = v; else if (v.length < 8) r = v.substr(0, 3) + "-" + v.substr(3); else r = v.substr(0, 3) + "-" + v.substr(3, 4) + "-" + v.substr(7);
@@ -278,7 +270,7 @@
         document.getElementById('check_phone').addEventListener('input', autoHyphen);
         flatpickr("#rangeDate", { mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today" });
 
-        // --- 예약 신청 ---
+        // 예약
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -296,14 +288,13 @@
             btn.innerText = "예약 신청 완료";
         });
 
-        // --- 개인 예약 조회 (완벽 복구: 성함+연락처 필터링 및 스타일) ---
+        // 조회
         async function handleLookup() {
             const name = document.getElementById('check_name').value.trim();
             const phone = document.getElementById('check_phone').value;
             const area = document.getElementById('resultArea');
             if (!name || !phone) return;
             area.innerHTML = "<p style='color:#333; text-align:center;'>조회 중...</p>"; area.style.display = "block";
-            
             const data = await window.getFromFirebase(phone);
             if (data) {
                 const myRes = Object.values(data).filter(r => r.name === name);
@@ -319,16 +310,11 @@
                 } else { alert("이름이 일치하지 않습니다."); area.style.display="none"; }
             } else { alert("내역을 찾을 수 없습니다."); area.style.display="none"; }
         }
+        async function handleCancel(phone, resKey) { if (confirm("예약을 취소하시겠습니까?")) { await window.deleteFromFirebase(phone, resKey); alert("정상적으로 취소되었습니다."); handleLookup(); } }
 
-        async function handleCancel(phone, resKey) {
-            if (!confirm("예약을 취소하시겠습니까?")) return;
-            await window.deleteFromFirebase(phone, resKey);
-            alert("정상적으로 취소되었습니다.");
-            handleLookup();
-        }
-
-        // --- 어드민 기능 ---
+        // 어드민 전용 로직
         let adminData = []; let filteredData = []; let curPage = 1; let rowsPerPage = 10; let editResKey = null;
+
         function loginAdmin() {
             if (document.getElementById('adminPassword').value === "aloha1234") {
                 document.getElementById('adminAuth').style.display = "none";
@@ -336,29 +322,67 @@
                 loadAdminData();
             } else { alert("비밀번호 오류"); }
         }
-        async function loadAdminData() { adminData = await window.getAllFromFirebase(); filteredData = [...adminData]; renderAdminTable(); }
+
+        async function loadAdminData() { 
+            adminData = await window.getAllFromFirebase(); 
+            filteredData = [...adminData]; 
+            renderAdminTable(); 
+        }
+
         function handleAdminSearch() {
             const q = document.getElementById('adminSearch').value.toLowerCase();
             filteredData = adminData.filter(r => (r.name && r.name.toLowerCase().includes(q)) || (r.phone && r.phone.includes(q)));
             curPage = 1; renderAdminTable();
         }
+
         function changePageSize() { rowsPerPage = parseInt(document.getElementById('rowsPerPage').value); curPage = 1; renderAdminTable(); }
+
         function renderAdminTable() {
-            const tbody = document.getElementById('adminTbody'); tbody.innerHTML = "";
-            if(filteredData.length === 0) { tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:30px;'>내역이 없습니다.</td></tr>"; return; }
-            const start = (curPage - 1) * rowsPerPage; const end = start + rowsPerPage; const paginated = filteredData.slice(start, end);
+            const tbody = document.getElementById('adminTbody'); 
+            tbody.innerHTML = "";
+            
+            if(filteredData.length === 0) { 
+                tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:30px;'>데이터가 없습니다.</td></tr>"; 
+                return; 
+            }
+
+            const start = (curPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginated = filteredData.slice(start, end);
+
+            // 데이터 개수만큼만 반복하여 행 생성
             paginated.forEach((r, idx) => {
                 const tr = document.createElement('tr');
-                const no = filteredData.length - (start + idx);
+                const no = start + idx + 1; // 순차적 번호 표시 (1, 2, 3...)
+
                 if (editResKey === r.resKey) {
-                    tr.innerHTML = `<td>${no}</td><td>${r.time || ''}</td><td><input type="text" id="edit_name" value="${r.name || ''}"></td><td><input type="text" id="edit_phone" value="${r.phone || ''}"></td><td><input type="text" id="edit_email" value="${r.email || ''}"></td><td><input type="text" id="edit_product" value="${r.product || ''}"></td><td><input type="text" id="edit_dates" value="${r.dates || ''}"></td><td><input type="text" id="edit_adults" value="${r.adults || ''}"></td><td><input type="text" id="edit_children" value="${r.children || ''}"></td><td><button class="admin-btn btn-save" onclick="saveEdit('${r.phoneKey}', '${r.resKey}')">저장</button><button class="admin-btn" onclick="cancelEdit()">취소</button></td>`;
+                    tr.innerHTML = `
+                        <td>${no}</td><td>${r.time || ''}</td>
+                        <td><input type="text" id="edit_name" value="${r.name || ''}"></td>
+                        <td><input type="text" id="edit_phone" value="${r.phone || ''}"></td>
+                        <td><input type="text" id="edit_email" value="${r.email || ''}"></td>
+                        <td><input type="text" id="edit_product" value="${r.product || ''}"></td>
+                        <td><input type="text" id="edit_dates" value="${r.dates || ''}"></td>
+                        <td><input type="text" id="edit_adults" value="${r.adults || ''}"></td>
+                        <td><input type="text" id="edit_children" value="${r.children || ''}"></td>
+                        <td>
+                            <button class="admin-btn btn-save" onclick="saveEdit('${r.phoneKey}', '${r.resKey}')">저장</button>
+                            <button class="admin-btn" onclick="cancelEdit()">취소</button>
+                        </td>`;
                 } else {
-                    tr.innerHTML = `<td>${no}</td><td>${r.time || ''}</td><td>${r.name || ''}</td><td>${r.phone || ''}</td><td>${r.email || ''}</td><td>${r.product || ''}</td><td>${r.dates || ''}</td><td>${r.adults || 0}</td><td>${r.children || 0}</td><td><button class="admin-btn btn-edit" onclick="startEdit('${r.resKey}')">수정</button><button class="admin-btn btn-del" onclick="deleteItem('${r.phoneKey}', '${r.resKey}')">삭제</button></td>`;
+                    tr.innerHTML = `
+                        <td>${no}</td><td>${r.time || ''}</td><td>${r.name || ''}</td><td>${r.phone || ''}</td><td>${r.email || ''}</td>
+                        <td>${r.product || ''}</td><td>${r.dates || ''}</td><td>${r.adults || 0}</td><td>${r.children || 0}</td>
+                        <td>
+                            <button class="admin-btn btn-edit" onclick="startEdit('${r.resKey}')">수정</button>
+                            <button class="admin-btn btn-del" onclick="deleteItem('${r.phoneKey}', '${r.resKey}')">삭제</button>
+                        </td>`;
                 }
                 tbody.appendChild(tr);
             });
             renderPagination();
         }
+
         function renderPagination() {
             const pBox = document.getElementById('adminPagination'); pBox.innerHTML = "";
             const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -367,15 +391,15 @@
                 b.innerText = i; b.onclick = () => { curPage = i; renderAdminTable(); }; pBox.appendChild(b);
             }
         }
+
         function startEdit(rKey) { editResKey = rKey; renderAdminTable(); }
         function cancelEdit() { editResKey = null; renderAdminTable(); }
         async function saveEdit(pKey, rKey) {
             const updated = { name: document.getElementById('edit_name').value, phone: document.getElementById('edit_phone').value, email: document.getElementById('edit_email').value, product: document.getElementById('edit_product').value, dates: document.getElementById('edit_dates').value, adults: document.getElementById('edit_adults').value, children: document.getElementById('edit_children').value };
             await window.updateFirebase(pKey, rKey, updated); alert("수정되었습니다."); editResKey = null; loadAdminData();
         }
-        async function deleteItem(pKey, rKey) { if (confirm("정말 삭제하시겠습니까?")) { await window.deleteFromFirebase(pKey, rKey); alert("삭제되었습니다."); loadAdminData(); } }
+        async function deleteItem(pKey, rKey) { if (confirm("정말 삭제하시겠습니까?")) { await window.deleteFromFirebase(pKey.replace(/-/g,""), rKey); alert("삭제되었습니다."); loadAdminData(); } }
 
-        // --- 공통 메뉴/스크롤 ---
         function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('open'); }
         function goToSection(i) { document.querySelectorAll('section')[i].scrollIntoView({ behavior: 'smooth' }); if(document.getElementById('menuOverlay').classList.contains('open')) toggleMenu(); }
         document.getElementById('mainContainer').addEventListener('scroll', () => {
