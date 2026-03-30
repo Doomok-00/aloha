@@ -8,10 +8,10 @@
         /* 1. 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* [수정] 모바일/터치 기기에서는 커스텀 커서가 절대 보이지 않도록 강력 차단 */
+        /* [마우스 포인터 해결] 모바일/태블릿(터치 기기)에서는 커스텀 커서 아예 제거 */
         @media (pointer: coarse) {
+            .cursor-dot, .cursor-outline { display: none !important; visibility: hidden !important; opacity: 0 !important; }
             * { cursor: auto !important; }
-            .cursor-dot, .cursor-outline { display: none !important; visibility: hidden !important; }
         }
 
         /* PC에서만 커스텀 커서 사용 및 시스템 커서 숨김 */
@@ -117,7 +117,7 @@
         }
         .date-group { display: flex; gap: 10px; }
 
-        /* 8. 지도 및 연락처 */
+        /* 8. 지도 및 연락처 (가려짐 방지) */
         .contact-info { width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 15px; }
         .map-box { width: 100%; height: 250px; border-radius: 15px; overflow: hidden; border: 2px solid #00d2ff; }
         .info-box { background: rgba(0,0,0,0.75); padding: 20px; border-radius: 15px; text-align: left; font-size: 14px; }
@@ -132,7 +132,7 @@
 </head>
 <body>
 
-    <!-- 마우스 커서 (PC에서만 작동) -->
+    <!-- 마우스 커서 -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
 
@@ -172,17 +172,17 @@
 
         <section id="booking">
             <h2 style="margin-bottom: 20px; font-size: 1.8rem;">Booking</h2>
-            <form class="booking-form" id="bookingForm">
+            <form class="booking-form" id="resForm">
                 <input type="text" placeholder="성함" required>
                 <input type="tel" placeholder="연락처" required>
                 <input type="email" placeholder="이메일" required>
                 <div class="date-group">
                     <div style="flex:1">
-                        <label style="font-size:10px; display:block; text-align:left; color:#666; margin-bottom:2px;">출발일</label>
+                        <label style="font-size:10px; display:block; text-align:left; color:#666;">출발일</label>
                         <input type="date" id="startDate" required>
                     </div>
                     <div style="flex:1">
-                        <label style="font-size:10px; display:block; text-align:left; color:#666; margin-bottom:2px;">종료일</label>
+                        <label style="font-size:10px; display:block; text-align:left; color:#666;">종료일</label>
                         <input type="date" id="endDate" required>
                     </div>
                 </div>
@@ -219,14 +219,14 @@
         const endDate = document.getElementById('endDate');
         const sections = document.querySelectorAll('section');
         const dots = document.querySelectorAll('.dot');
-        const bookingForm = document.getElementById('bookingForm');
+        const resForm = document.getElementById('resForm');
 
-        // 오늘 날짜 설정 (과거 날짜 선택 방지)
+        // 과거 날짜 방지
         const today = new Date().toISOString().split('T')[0];
         startDate.min = today;
 
-        // 1. 마우스 애니메이션 (PC 전용 및 터치 디바이스 제외)
-        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        // [마우스 커서] 터치 기기가 아닌 경우에만 이벤트 등록
+        const isTouch = window.matchMedia("(pointer: coarse)").matches;
         if (!isTouch) {
             window.addEventListener('mousemove', (e) => {
                 dot.style.left = e.clientX + 'px';
@@ -238,37 +238,33 @@
             });
         }
 
-        // 2. 달력 로직 (iOS/아이패드 버그 해결)
-        // 출발일 선택 시 오늘 날짜가 자동 확정되지 않도록 showPicker 호출 로직 수정
+        // [달력 로직] 강제 포커스 이동 제거 (아이패드 버그 방지)
         startDate.addEventListener('change', () => {
             const val = startDate.value;
             if (val) {
-                endDate.min = val; 
+                // 종료일 최소값을 시작일로 설정
+                endDate.min = val;
+                // 사용자가 시작일보다 빠른 종료일을 이미 골라뒀다면 초기화
                 if (endDate.value && endDate.value < val) {
                     endDate.value = "";
                 }
-                
-                // iOS에서는 출발일 선택창이 닫히기 전에 focus를 주면 오늘 날짜로 자동 commit되는 버그가 있음
-                // 이를 방지하기 위해 충분한 시간을 두고 포커스를 이동시킴
-                if (isTouch) {
-                    setTimeout(() => {
-                        endDate.focus();
-                    }, 800); // 0.8초의 충분한 딜레이 부여
-                } else {
+                // [수정] 모바일/태블릿에서는 자동으로 포커스를 옮기지 않습니다.
+                // 대신 사용자가 직접 종료일 칸을 눌렀을 때 시작일 이후부터 정상 표기됩니다.
+                if (!isTouch) {
                     endDate.focus();
                     if ('showPicker' in HTMLInputElement.prototype) endDate.showPicker();
                 }
             }
         });
 
-        // 3. 예약 완료 팝업
-        bookingForm.addEventListener('submit', (e) => {
+        // [예약 신청] 완료 창 알림
+        resForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            alert("알로하! 예약 신청이 정상적으로 완료되었습니다.\n현지 담당자가 확인 후 연락드리겠습니다.");
-            bookingForm.reset(); // 폼 초기화
+            alert("알로하! 예약 신청이 완료되었습니다.\n담당자가 빠른 시일 내에 연락드리겠습니다.");
+            resForm.reset();
         });
 
-        // 4. 메뉴 및 기타 기능
+        // 메뉴/스크롤 기능
         function toggleMenu() { overlay.classList.toggle('open'); }
         function goToSection(idx) {
             sections[idx].scrollIntoView({ behavior: 'smooth' });
@@ -285,8 +281,8 @@
 
         const hoverTargets = document.querySelectorAll('button, a, input, select, .dot');
         hoverTargets.forEach(el => {
-            el.addEventListener('mouseenter', () => outline.classList.add('hover'));
-            el.addEventListener('mouseleave', () => outline.classList.remove('hover'));
+            el.addEventListener('mouseenter', () => { if(!isTouch) outline.classList.add('hover'); });
+            el.addEventListener('mouseleave', () => { if(!isTouch) outline.classList.remove('hover'); });
         });
     </script>
 </body>
