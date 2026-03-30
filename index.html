@@ -48,28 +48,42 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
         
-        /* 2. 즉각 반응형 타겟 마우스 포인터 */
+        /* 2. [수정] 마우스 포인터 가시성 강화 (반전 효과) */
         @media (pointer: fine) {
             * { cursor: none !important; }
-            .cursor-dot { width: 6px; height: 6px; background: #00d2ff; border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000; transform: translate(-50%, -50%); will-change: transform; }
-            .cursor-outline { width: 36px; height: 36px; border: 1.5px solid rgba(255, 255, 255, 0.6); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; transform: translate(-50%, -50%); will-change: transform; transition: width 0.1s, height 0.1s; }
-            .cursor-outline.hover { width: 54px; height: 54px; border-color: #00d2ff; background: rgba(0, 210, 255, 0.1); }
+            .cursor-dot {
+                width: 6px; height: 6px; background: #fff; border-radius: 50%;
+                position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000000;
+                transform: translate(-50%, -50%);
+                mix-blend-mode: difference; /* 배경색에 따라 색상 자동 반전 */
+                will-change: transform;
+            }
+            .cursor-outline {
+                width: 36px; height: 36px; border: 2px solid #fff; border-radius: 50%;
+                position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999;
+                transform: translate(-50%, -50%);
+                mix-blend-mode: difference; /* 배경색에 따라 색상 자동 반전 */
+                will-change: transform;
+                transition: width 0.15s ease-out, height 0.15s ease-out;
+            }
+            .cursor-outline.hover { width: 56px; height: 56px; background: rgba(255, 255, 255, 0.2); }
         }
 
         html, body { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #000; color: #fff; }
         .container { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         section { height: 100dvh; width: 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover !important; background-position: center !important; text-align: center; padding: 0 10%; }
 
-        /* 3. 배경 이미지 설정 (이미지 로딩 최우선 보장 구조) */
-        #home { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600'); }
+        /* 3. [배경 이미지] */
+        #home { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600'); }
         #tours { background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600'); }
         
-        /* [중요] 세번째 예약 페이지 배경: 비행기와 사람이 뛰어내리는 역동적인 하와이 스카이다이빙 이미지 */
-        #booking { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1521017432521-f34f73003295?w=1600'); }
+        /* 세번째 페이지: 스카이다이빙 대신 로딩이 확실한 하와이 석양 배경으로 교체 */
+        #booking { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1600'); }
         
         #check { background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1503756234508-e32369269deb?w=1600'); }
         #contact { background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1505881502353-a1986add3732?w=1600'); }
 
+        /* UI 버튼 */
         .indicator { position: fixed; left: 25px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 15px; }
         .dot { width: 10px; height: 10px; border: 1px solid #fff; background: rgba(255,255,255,0.2); transition: 0.3s; }
         .dot.active { background: #00d2ff; border-color: #00d2ff; transform: scale(1.3); }
@@ -133,7 +147,6 @@
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING (성인/어린이 옵션 업데이트 완료) -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
@@ -183,7 +196,7 @@
     </div>
 
     <script>
-        // 1. 즉각 반응 마우스 커서
+        // 1. [핵심] 마우스 커서 스크립트 (즉각 반응형)
         const dot = document.querySelector('.cursor-dot');
         const outline = document.querySelector('.cursor-outline');
         let mouseX = 0, mouseY = 0, outX = 0, outY = 0;
@@ -191,14 +204,19 @@
         if (!window.matchMedia("(pointer: coarse)").matches) {
             window.addEventListener('mousemove', (e) => {
                 mouseX = e.clientX; mouseY = e.clientY;
-                dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                // 점은 지연 없이 즉시 이동
+                dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
             });
+
             function animate() {
-                outX += (mouseX - outX) * 0.25; outY += (mouseY - outY) * 0.25;
-                outline.style.transform = `translate(${outX}px, ${outY}px) translate(-50%, -50%)`;
+                // 외곽 원은 부드러운 가속도를 주어 따라오게 함
+                outX += (mouseX - outX) * 0.3; 
+                outY += (mouseY - outY) * 0.3;
+                outline.style.transform = `translate3d(${outX}px, ${outY}px, 0) translate(-50%, -50%)`;
                 requestAnimationFrame(animate);
             }
             animate();
+
             document.querySelectorAll('button, a, input, select, .tour-card, .dot').forEach(el => {
                 el.addEventListener('mouseenter', () => outline.classList.add('hover'));
                 el.addEventListener('mouseleave', () => outline.classList.remove('hover'));
@@ -251,8 +269,7 @@
                     myRes.reverse().forEach(r => {
                         const item = document.createElement('div');
                         item.className = 'res-item';
-                        // r.key값을 찾기 위해 Object.entries 사용
-                        const key = Object.entries(data).find(([k, v]) => v === r)[0];
+                        const key = Object.keys(data).find(k => data[k] === r);
                         item.innerHTML = `<div style="flex:1;"><b>📦 ${r.product}</b><p style="color:#555; font-size:13px;">📅 ${r.dates}</p><p style="color:#555; font-size:13px;">👥 성인 ${r.adults}, 어린이 ${r.children}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${key}', '${r.name}', '${r.product}')">취소</button>`;
                         area.appendChild(item);
                     });
@@ -273,11 +290,14 @@
             } catch (err) { alert("오류 발생"); }
         }
 
+        // 메뉴/스크롤
         function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('open'); }
         function goToSection(i) { document.querySelectorAll('section')[i].scrollIntoView({ behavior: 'smooth' }); if(document.getElementById('menuOverlay').classList.contains('open')) toggleMenu(); }
         document.getElementById('mainContainer').addEventListener('scroll', () => {
             let cur = 0;
-            document.querySelectorAll('section').forEach((s, i) => { if (document.getElementById('mainContainer').scrollTop >= s.offsetTop - 50) cur = i; });
+            const sections = document.querySelectorAll('section');
+            const container = document.getElementById('mainContainer');
+            sections.forEach((s, i) => { if (container.scrollTop >= s.offsetTop - 50) cur = i; });
             document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
         });
     </script>
