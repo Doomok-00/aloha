@@ -62,7 +62,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* 1. 커서 개선: 흰 테두리가 있는 검은 점 (어떤 배경에서도 보임) */
+        /* 1. 커서 개선: 검은 점 + 흰 테두리 */
         * { cursor: none !important; }
         .cursor-dot { width: 10px; height: 10px; background: #000; border: 2px solid #fff; border-radius: 50%; position: fixed; z-index: 1000000; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         .cursor-trail { position: fixed; z-index: 999999; pointer-events: none; font-size: 28px; filter: drop-shadow(0 0 8px rgba(0,210,255,0.9)); will-change: transform; }
@@ -91,13 +91,15 @@
         .form-card input, .form-card select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 16px; }
         .action-btn { background: #00d2ff; border: none; padding: 15px 30px; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* 관리자 테이블 */
+        /* 관리자 테이블 스타일 */
         .admin-box { width: 100%; max-width: 1200px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: left; overflow-x: auto; }
-        .admin-table { width: 100%; border-collapse: collapse; color: #fff; font-size: 12px; margin-top: 15px; min-width: 900px; }
+        .admin-table { width: 100%; border-collapse: collapse; color: #fff; font-size: 12px; margin-top: 15px; min-width: 1000px; }
         .admin-table th { background: #00d2ff; color: #000; padding: 10px; }
         .admin-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .admin-table input { width: 100%; background: #222; color: #fff; border: 1px solid #00d2ff; padding: 4px; border-radius: 4px; }
         .admin-btn { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; margin-right: 3px; }
         .btn-edit { background: #ffcc00; color: #000; }
+        .btn-save { background: #4cd964; color: #fff; }
         .btn-del { background: #ff3b30; color: #fff; }
 
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
@@ -135,10 +137,8 @@
     </div>
 
     <div class="container" id="mainContainer">
-        <!-- 1. HOME -->
         <section id="home"><h1>ALOHA VIBES</h1><p style="color: #00d2ff;">완벽한 하와이 어드벤처</p></section>
         
-        <!-- 2. TOURS -->
         <section id="tours">
             <h2 style="margin-bottom: 30px;">Premium Tours</h2>
             <div class="tour-container">
@@ -150,12 +150,12 @@
             <button class="action-btn" style="padding: 18px 60px;" onclick="goToSection(2)">예약하러 가기</button>
         </section>
 
-        <!-- 3. BOOKING -->
+        <!-- 3. BOOKING: 인원 선택 수정 -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking Request</h2>
             <form action="https://formspree.io/f/xojpdaqq" method="POST" class="form-card" id="resForm">
                 <input type="text" name="name" id="book_name" placeholder="성함" required>
-                <input type="tel" name="phone" id="book_phone" placeholder="연락처 (010-0000-0000)" maxlength="13" required>
+                <input type="tel" name="phone" id="book_phone" placeholder="연락처" maxlength="13" required>
                 <input type="email" name="email" id="book_email" placeholder="이메일" required>
                 <input type="text" id="rangeDate" name="dates" placeholder="일정 선택" readonly required>
                 <select name="product" id="book_product" required>
@@ -164,14 +164,19 @@
                     <option>하나우마베이 스노클링</option><option>하와이 스카이다이빙</option>
                 </select>
                 <div style="display:flex; gap:10px;">
-                    <select name="adults" id="book_adults" required><option value="1">성인 1명</option><option value="2">성인 2명</option><option value="3">성인 3명</option></select>
-                    <select name="children" id="book_children"><option value="0">어린이 0명</option><option value="1">어린이 1명</option></select>
+                    <select name="adults" id="book_adults" required>
+                        <option value="0">성인 0명</option><option value="1">성인 1명</option><option value="2">성인 2명</option>
+                        <option value="3">성인 3명</option><option value="4">성인 4명</option><option value="5">성인 5명</option><option value="6인이상">성인 6명 이상</option>
+                    </select>
+                    <select name="children" id="book_children" required>
+                        <option value="0">어린이 0명</option><option value="1">어린이 1명</option><option value="2">어린이 2명</option>
+                        <option value="3">어린이 3명</option><option value="4">어린이 4명</option><option value="5">어린이 5명</option><option value="6인이상">어린이 6명 이상</option>
+                    </select>
                 </div>
                 <button type="submit" class="action-btn" id="submitBtn">예약 신청 완료</button>
             </form>
         </section>
 
-        <!-- 4. CHECK -->
         <section id="check">
             <h2 style="margin-bottom: 20px;">Check Reservation</h2>
             <div class="form-card">
@@ -181,13 +186,12 @@
             </div>
         </section>
 
-        <!-- 5. LOCATION -->
         <section id="contact">
             <div class="map-box"><iframe src="https://www.google.com/maps?q=Waikiki+Beach+Honolulu+HI&output=embed" width="100%" height="100%" style="border:0;"></iframe></div>
             <p style="margin-top:10px; font-size:14px; color:rgba(255,255,255,0.7);">📍 2335 Kalākaua Ave, Honolulu, HI 96815</p>
         </section>
 
-        <!-- 6. ADMIN -->
+        <!-- 6. ADMIN: 인라인 수정 구현 -->
         <section id="admin">
             <div id="adminAuth" class="form-card">
                 <h3>Admin Access</h3>
@@ -208,7 +212,7 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>시간</th><th>성함</th><th>연락처</th><th>이메일</th><th>상품</th><th>일정</th><th>인원</th><th>관리</th>
+                            <th>시간</th><th>성함</th><th>연락처</th><th>이메일</th><th>상품</th><th>일정</th><th>성인</th><th>아동</th><th>관리</th>
                         </tr>
                     </thead>
                     <tbody id="adminTbody"></tbody>
@@ -274,6 +278,7 @@
 
         // --- 어드민 기능 ---
         let adminData = []; let curPage = 1; let rowsPerPage = 10;
+        let editResKey = null; // 현재 수정 중인 행 아이디
 
         function loginAdmin() {
             if (document.getElementById('adminPassword').value === "aloha1234") {
@@ -283,16 +288,12 @@
             } else { alert("비밀번호 오류"); }
         }
 
-        async function loadAdminData() {
-            adminData = await window.getAllFromFirebase();
-            renderAdminTable();
-        }
-
+        async function loadAdminData() { adminData = await window.getAllFromFirebase(); renderAdminTable(); }
         function changePageSize() { rowsPerPage = parseInt(document.getElementById('rowsPerPage').value); curPage = 1; renderAdminTable(); }
 
         function renderAdminTable() {
             const tbody = document.getElementById('adminTbody'); tbody.innerHTML = "";
-            if(adminData.length === 0) { tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding:30px;'>예약 내역이 없습니다.</td></tr>"; return; }
+            if(adminData.length === 0) { tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'>예약 내역이 없습니다.</td></tr>"; return; }
             
             const start = (curPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
@@ -300,13 +301,31 @@
 
             paginated.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${r.time || ''}</td><td>${r.name || ''}</td><td>${r.phone || ''}</td><td>${r.email || ''}</td>
-                    <td>${r.product || ''}</td><td>${r.dates || ''}</td><td>${r.adults || 0}/${r.children || 0}</td>
-                    <td>
-                        <button class="admin-btn btn-edit" onclick="editItem('${r.phoneKey}', '${r.resKey}')">수정</button>
-                        <button class="admin-btn btn-del" onclick="deleteItem('${r.phoneKey}', '${r.resKey}')">삭제</button>
-                    </td>`;
+                if (editResKey === r.resKey) {
+                    // 수정 모드 행
+                    tr.innerHTML = `
+                        <td>${r.time || ''}</td>
+                        <td><input type="text" id="edit_name" value="${r.name || ''}"></td>
+                        <td><input type="text" id="edit_phone" value="${r.phone || ''}"></td>
+                        <td><input type="text" id="edit_email" value="${r.email || ''}"></td>
+                        <td><input type="text" id="edit_product" value="${r.product || ''}"></td>
+                        <td><input type="text" id="edit_dates" value="${r.dates || ''}"></td>
+                        <td><input type="text" id="edit_adults" value="${r.adults || ''}"></td>
+                        <td><input type="text" id="edit_children" value="${r.children || ''}"></td>
+                        <td>
+                            <button class="admin-btn btn-save" onclick="saveEdit('${r.phoneKey}', '${r.resKey}')">저장</button>
+                            <button class="admin-btn" onclick="cancelEdit()">취소</button>
+                        </td>`;
+                } else {
+                    // 일반 모드 행
+                    tr.innerHTML = `
+                        <td>${r.time || ''}</td><td>${r.name || ''}</td><td>${r.phone || ''}</td><td>${r.email || ''}</td>
+                        <td>${r.product || ''}</td><td>${r.dates || ''}</td><td>${r.adults || 0}</td><td>${r.children || 0}</td>
+                        <td>
+                            <button class="admin-btn btn-edit" onclick="startEdit('${r.resKey}')">수정</button>
+                            <button class="admin-btn btn-del" onclick="deleteItem('${r.phoneKey}', '${r.resKey}')">삭제</button>
+                        </td>`;
+                }
                 tbody.appendChild(tr);
             });
             renderPagination();
@@ -321,16 +340,23 @@
             }
         }
 
-        async function editItem(pKey, rKey) {
-            const item = adminData.find(d => d.resKey === rKey);
-            const newName = prompt("이름 수정:", item.name || "");
-            const newPhone = prompt("연락처 수정:", item.phone || "");
-            const newEmail = prompt("이메일 수정:", item.email || "");
-            const newProduct = prompt("상품 수정:", item.product || "");
-            if (newName !== null) {
-                await window.updateFirebase(pKey, rKey, { name: newName, phone: newPhone, email: newEmail, product: newProduct });
-                alert("수정되었습니다."); loadAdminData();
-            }
+        function startEdit(rKey) { editResKey = rKey; renderAdminTable(); }
+        function cancelEdit() { editResKey = null; renderAdminTable(); }
+
+        async function saveEdit(pKey, rKey) {
+            const updated = {
+                name: document.getElementById('edit_name').value,
+                phone: document.getElementById('edit_phone').value,
+                email: document.getElementById('edit_email').value,
+                product: document.getElementById('edit_product').value,
+                dates: document.getElementById('edit_dates').value,
+                adults: document.getElementById('edit_adults').value,
+                children: document.getElementById('edit_children').value
+            };
+            await window.updateFirebase(pKey, rKey, updated);
+            alert("수정되었습니다.");
+            editResKey = null;
+            loadAdminData();
         }
 
         async function deleteItem(pKey, rKey) {
