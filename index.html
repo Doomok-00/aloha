@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
     <style>
-        /* [기존 디자인 유지 - 가독성을 위해 CSS는 이전과 동일] */
+        /* [기존 디자인 및 레이아웃 유지] */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media (pointer: coarse) { .cursor-dot, .cursor-outline { display: none !important; } * { cursor: auto !important; } }
         @media (pointer: fine) { * { cursor: none !important; } .cursor-dot, .cursor-outline { display: block; } }
@@ -77,23 +77,21 @@
             </div>
         </section>
 
-        <!-- 예약 양식 (Formspree 적용) -->
+        <!-- 예약 양식 -->
         <section id="booking">
             <h2 style="margin-bottom: 20px;">Booking</h2>
-            <!-- [주의] 아래 action 주소에 Formspree에서 발급받은 ID를 넣으세요 -->
-            <form action="https://formspree.io/f/xojpdaqq" method="POST" class="booking-form" id="resForm">
-                <input type="text" name="이름" placeholder="성함" required>
-                <input type="tel" name="연락처" placeholder="연락처" required>
-                <input type="email" name="_replyto" placeholder="이메일 (답신용)" required>
-                <input type="text" id="rangeDate" name="예약일정" placeholder="날짜를 선택하세요" readonly required>
-                <select name="선택상품" required>
+            <!-- action 주소는 본인의 Formspree ID로 유지하세요 -->
+            <form action="https://formspree.io/f/여기에_복사한_ID를_넣으세요" method="POST" class="booking-form" id="resForm">
+                <input type="text" name="name" placeholder="성함" required>
+                <input type="tel" name="phone" placeholder="연락처" required>
+                <input type="email" name="email" placeholder="이메일" required>
+                <input type="text" id="rangeDate" name="dates" placeholder="날짜를 선택하세요" readonly required>
+                <select name="product" required>
                     <option value="">상품 선택</option>
                     <option>오아후 섬 일주</option><option>섬 전체 헬기 투어</option>
                     <option>하나우마베이 스노클링</option><option>하와이 스카이다이빙</option>
                 </select>
-                <!-- 스팸 방지용 -->
-                <input type="hidden" name="_subject" value="새로운 하와이 예약 신청이 도착했습니다!">
-                <button type="submit" class="book-btn" style="height: 45px;">예약 신청 완료</button>
+                <button type="submit" class="book-btn" id="submitBtn" style="height: 45px;">예약 신청 완료</button>
             </form>
         </section>
 
@@ -113,8 +111,10 @@
         const outline = document.querySelector('.cursor-outline');
         const overlay = document.getElementById('menuOverlay');
         const container = document.getElementById('mainContainer');
+        const resForm = document.getElementById('resForm');
+        const submitBtn = document.getElementById('submitBtn');
 
-        // 1. 기간 선택 달력 (Flatpickr)
+        // 1. 기간 선택 달력
         flatpickr("#rangeDate", {
             mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today", disableMobile: "true",
             onClose: function(selectedDates, dateStr, instance) {
@@ -125,7 +125,38 @@
             }
         });
 
-        // 2. 마우스 커서 (PC용)
+        // 2. [핵심 수정] 이메일 비동기 전송 로직 (자체 팝업용)
+        resForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // 페이지 이동 차단
+            
+            const formData = new FormData(this);
+            submitBtn.innerText = "전송 중...";
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    // 전송 성공 시
+                    alert("알로하! 예약 신청이 성공적으로 접수되었습니다.\n확인 후 jangyh89@gmail.com에서 답변 드리겠습니다.");
+                    resForm.reset(); // 폼 초기화
+                } else {
+                    // 에러 발생 시
+                    alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+                }
+            } catch (error) {
+                alert("네트워크 오류가 발생했습니다.");
+            } finally {
+                submitBtn.innerText = "예약 신청 완료";
+                submitBtn.disabled = false;
+            }
+        });
+
+        // 3. 마우스 커서 (PC용)
         const isTouch = window.matchMedia("(pointer: coarse)").matches;
         if (!isTouch) {
             window.addEventListener('mousemove', (e) => {
@@ -134,7 +165,7 @@
             });
         }
 
-        // 3. 메뉴 및 스크롤
+        // 4. 메뉴 및 스크롤
         function toggleMenu() { overlay.classList.toggle('open'); }
         function goToSection(idx) { document.querySelectorAll('section')[idx].scrollIntoView({ behavior: 'smooth' }); overlay.classList.remove('open'); }
         container.addEventListener('scroll', () => {
