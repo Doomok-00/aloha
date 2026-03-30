@@ -46,7 +46,7 @@
                         flatList.push({ ...allData[phoneKey][resKey], resKey, phoneKey });
                     });
                 });
-                // 수정: 예약일시 기준 오름차순 정렬 (과거가 0번 인덱스)
+                // 타임스탬프 기준 오름차순 정렬 (먼저 예약한 사람이 0번 인덱스)
                 return flatList.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
             }
             return [];
@@ -337,16 +337,16 @@
             const start = (curPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
             
-            // 수정된 로직: 번호는 등록 순서대로(1, 2, 3...) 부여하고 화면에는 최신순(역순)으로 출력
-            let paginated = filteredData.slice(start, end).map((item, idx) => ({
+            // 현재 페이지 데이터 추출 및 실제 데이터 기반 1번부터 번호 부여
+            let pageData = filteredData.slice(start, end).map((item, idx) => ({
                 ...item,
-                originalNo: start + idx + 1 // 등록 순서 번호 부여 (가장 과거가 1번)
+                displayNo: start + idx + 1
             }));
-            
-            // 화면 상단에 최신 번호가 오도록 뒤집기
-            paginated.reverse().forEach((r) => {
+
+            // 최신 예약이 위로 오도록 배열 뒤집기
+            pageData.reverse().forEach((r) => {
                 const tr = document.createElement('tr');
-                const no = r.originalNo;
+                const no = r.displayNo;
 
                 if (editResKey === r.resKey) {
                     tr.innerHTML = `
