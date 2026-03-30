@@ -46,8 +46,8 @@
                         flatList.push({ ...allData[phoneKey][resKey], resKey, phoneKey });
                     });
                 });
-                // 최신순 정렬 (최신 예약이 배열 앞쪽)
-                return flatList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                // 1. 시간 순서대로 정렬 (오래된 순 [0] ... 최신 순 [끝])
+                return flatList.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
             }
             return [];
         };
@@ -227,8 +227,7 @@
 
     <script>
         function createRipple(x, y) {
-            const ripple = document.createElement('div');
-            ripple.className = 'touch-ripple'; document.body.appendChild(ripple);
+            const ripple = document.createElement('div'); ripple.className = 'touch-ripple'; document.body.appendChild(ripple);
             const size = 40; ripple.style.width = ripple.style.height = size + 'px';
             ripple.style.left = (x - size/2) + 'px'; ripple.style.top = (y - size/2) + 'px';
             ripple.addEventListener('animationend', () => ripple.remove());
@@ -251,7 +250,6 @@
         document.getElementById('check_phone').addEventListener('input', autoHyphen);
         flatpickr("#rangeDate", { mode: "range", locale: "ko", dateFormat: "y.m.d", minDate: "today" });
 
-        // [복구] 예약 신청 시 메일 전송
         document.getElementById('resForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -265,8 +263,8 @@
             try {
                 const res = await fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'Accept': 'application/json' } });
                 if (res.ok) { await window.saveToFirebase(data); alert("예약 신청이 완료되었습니다."); this.reset(); }
-                else { alert("메일 전송 실패. 고객센터로 문의 바랍니다."); }
-            } catch (err) { alert("연결 오류 발생"); }
+                else { alert("전송 실패"); }
+            } catch (err) { alert("오류 발생"); }
             btn.innerText = "예약 신청 완료";
         });
 
@@ -275,38 +273,30 @@
             const phone = document.getElementById('check_phone').value;
             const area = document.getElementById('resultArea');
             if (!name || !phone) return;
-            area.innerHTML = "<p style='color:#333; text-align:center;'>조회 중...</p>"; area.style.display = "block";
+            area.innerHTML = "조회 중..."; area.style.display = "block";
             const data = await window.getFromFirebase(phone);
             if (data) {
                 const myRes = Object.values(data).filter(r => r.name === name);
                 if (myRes.length > 0) {
                     area.innerHTML = `<h4 style='color:#007fa3; margin-bottom:10px;'>총 ${myRes.length}건</h4>`;
                     myRes.reverse().forEach(r => {
-                        const item = document.createElement('div');
-                        item.className = 'res-item';
+                        const item = document.createElement('div'); item.className = 'res-item';
                         const resKey = Object.keys(data).find(k => data[k] === r);
-                        item.innerHTML = `<div style="flex:1;"><b>📦 ${r.product}</b><p style="color:#555; font-size:13px;">📅 ${r.dates}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${resKey}', '${r.name}', '${r.product}')">취소</button>`;
+                        item.innerHTML = `<div style="flex:1;"><b>📦 ${r.product}</b><p style="font-size:13px;">📅 ${r.dates}</p></div><button class="cancel-btn" onclick="handleCancel('${phone}', '${resKey}', '${r.name}', '${r.product}')">취소</button>`;
                         area.appendChild(item);
                     });
-                } else { alert("이름이 일치하지 않습니다."); area.style.display="none"; }
-            } else { alert("내역을 찾을 수 없습니다."); area.style.display="none"; }
+                } else { alert("이름 불일치"); area.style.display="none"; }
+            } else { alert("내역 없음"); area.style.display="none"; }
         }
 
-        // [복구] 예약 취소 시 메일 알림
         async function handleCancel(phone, resKey, name, product) {
-            if (!confirm("예약을 취소하시겠습니까?")) return;
+            if (!confirm("취소하시겠습니까?")) return;
             const cancelData = new FormData();
-            cancelData.append("알림", "⚠️ 예약 취소 발생");
-            cancelData.append("고객명", name);
-            cancelData.append("연락처", phone);
-            cancelData.append("취소상품", product);
-
+            cancelData.append("알림", "⚠️ 예약 취소"); cancelData.append("고객", name); cancelData.append("연락처", phone);
             try {
                 await fetch("https://formspree.io/f/xojpdaqq", { method: 'POST', body: cancelData, headers: { 'Accept': 'application/json' } });
-                await window.deleteFromFirebase(phone, resKey);
-                alert("정상적으로 취소되었습니다.");
-                handleLookup();
-            } catch (err) { alert("취소 처리 중 오류 발생"); }
+                await window.deleteFromFirebase(phone, resKey); alert("취소되었습니다."); handleLookup();
+            } catch (err) { alert("오류"); }
         }
 
         let adminData = []; let filteredData = []; let curPage = 1; let rowsPerPage = 10; let editResKey = null;
@@ -328,11 +318,21 @@
         function renderAdminTable() {
             const tbody = document.getElementById('adminTbody'); tbody.innerHTML = "";
             if(filteredData.length === 0) { tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:30px;'>데이터가 없습니다.</td></tr>"; return; }
-            const start = (curPage - 1) * rowsPerPage; const end = start + rowsPerPage;
-            let pageData = filteredData.slice(start, end).map((item, idx) => ({ ...item, displayNo: start + idx + 1 }));
-            pageData.reverse().forEach((r) => {
+            
+            // 1. 페이징 범위 계산
+            const start = (curPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            
+            // 2. 현재 페이지에 보여줄 데이터만 추출 (신청 순서대로 들어있는 filteredData에서 추출)
+            const paginated = filteredData.slice(start, end);
+
+            // 3. 최신이 위로 오도록 배열을 뒤집어 렌더링 (단, 번호는 원래 순서 보존)
+            [...paginated].reverse().forEach((r) => {
                 const tr = document.createElement('tr');
-                const no = r.displayNo;
+                // No.는 전체 목록에서의 원래 순서 (오래된 것이 1번)
+                const originalIdx = filteredData.indexOf(r);
+                const no = originalIdx + 1;
+
                 if (editResKey === r.resKey) {
                     tr.innerHTML = `<td>${no}</td><td>${r.time || ''}</td><td><input type="text" id="edit_name" value="${r.name || ''}"></td><td><input type="text" id="edit_phone" value="${r.phone || ''}"></td><td><input type="text" id="edit_email" value="${r.email || ''}"></td><td><input type="text" id="edit_product" value="${r.product || ''}"></td><td><input type="text" id="edit_dates" value="${r.dates || ''}"></td><td><input type="text" id="edit_adults" value="${r.adults || ''}"></td><td><input type="text" id="edit_children" value="${r.children || ''}"></td><td><button class="admin-btn btn-save" onclick="saveEdit('${r.phoneKey}', '${r.resKey}')">저장</button><button class="admin-btn" onclick="cancelEdit()">취소</button></td>`;
                 } else {
@@ -342,6 +342,7 @@
             });
             renderPagination();
         }
+
         function renderPagination() {
             const pBox = document.getElementById('adminPagination'); pBox.innerHTML = "";
             const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -354,7 +355,7 @@
         function cancelEdit() { editResKey = null; renderAdminTable(); }
         async function saveEdit(pKey, rKey) {
             const updated = { name: document.getElementById('edit_name').value, phone: document.getElementById('edit_phone').value, email: document.getElementById('edit_email').value, product: document.getElementById('edit_product').value, dates: document.getElementById('edit_dates').value, adults: document.getElementById('edit_adults').value, children: document.getElementById('edit_children').value };
-            await window.updateFirebase(pKey, rKey, updated); alert("수정되었습니다."); editResKey = null; loadAdminData();
+            await window.updateFirebase(pKey, rKey, updated); alert("수정 완료"); editResKey = null; loadAdminData();
         }
         async function deleteItem(pKey, rKey) { if (confirm("정말 삭제하시겠습니까?")) { await window.deleteFromFirebase(pKey.replace(/-/g,""), rKey); alert("삭제되었습니다."); loadAdminData(); } }
 
